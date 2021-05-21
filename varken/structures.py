@@ -137,8 +137,10 @@ class OmbiTVRequest(NamedTuple):
     childRequests: list = None
     denied: bool = None
     deniedReason: None = None
+    externalProviderId: str = None
     id: int = None
     imdbId: str = None
+    languageProfile: str = None
     markedAsDenied: str = None
     overview: str = None
     posterPath: str = None
