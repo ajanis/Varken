@@ -74,7 +74,6 @@ class OverseerrServer(NamedTuple):
     verify_ssl: bool = False
     get_request_total_counts: bool = False
     request_total_run_seconds: int = 30
-    get_latest_requests: bool = False
     num_latest_requests_to_fetch: int = 10
     num_latest_requests_seconds: int = 30
 
@@ -196,25 +195,6 @@ class OmbiMovieRequest(NamedTuple):
 
 
 # Overseerr
-class OverseerrRequest(NamedTuple):
-    id: int = None
-    status: int = None
-    createdAt: str = None
-    updatedAt: str = None
-    type: str = None
-    is4k: bool = None
-    serverId: int = None
-    profileId: int = None
-    rootFolder: str = None
-    languageProfileId: int = None
-    tags: list = None
-    media: dict = None
-    seasons: list = None
-    modifiedBy: dict = None
-    requestedBy: dict = None
-    seasonCount: int = None
-
-
 class OverseerrRequestCounts(NamedTuple):
     pending: int = None
     approved: int = None
@@ -308,6 +288,8 @@ class SonarrQueue(NamedTuple):
     outputPath: str = None
     series: SonarrTVShow = None
     episode: SonarrEpisode = None
+    timeleft: int = None
+    estimatedCompletionTime: int = None
 
 
 # Radarr
@@ -374,6 +356,7 @@ class RadarrQueue(NamedTuple):
     errorMessage: str = None
     outputPath: str = None
     movie: RadarrMovie = None
+    timeleft: str = None
 
 
 # Sickchill
