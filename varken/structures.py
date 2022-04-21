@@ -333,6 +333,7 @@ class RadarrMovie(NamedTuple):
     youTubeTrailerId: str = None
     title: str = None
     originalLanguage: str = None
+    addOptions: str = None
 
 
 # Radarr Queue
