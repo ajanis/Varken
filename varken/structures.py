@@ -334,6 +334,7 @@ class RadarrMovie(NamedTuple):
     title: str = None
     originalLanguage: str = None
     addOptions: str = None
+    popularity: str = None
 
 
 # Radarr Queue
