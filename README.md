@@ -50,7 +50,7 @@ Please read [Asking for Support](https://wiki.cajun.pro/books/varken/chapter/ask
     
 ### InfluxDB
 [InfluxDB Installation Documentation](https://wiki.cajun.pro/books/varken/page/influxdb-d1f)
-Note: Only v1.8.x is currently supported.
+Note: Only v1.8.x or v2.x are supported.
  
 Influxdb is required but not packaged as part of Varken. Varken will create
 its database on its own. If you choose to give varken user permissions that
