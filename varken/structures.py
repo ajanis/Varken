@@ -18,6 +18,7 @@ class InfluxServer(NamedTuple):
     url: str = 'localhost'
     username: str = 'root'
     verify_ssl: bool = False
+    org: str = '-'
 
 
 class Influx2Server(NamedTuple):
