@@ -348,6 +348,7 @@ class RadarrMovie(NamedTuple):
     originalLanguage: str = None
     addOptions: str = None
     popularity: str = None
+    rootFolderPath: str = None
 
 
 # Radarr Queue
@@ -374,6 +375,10 @@ class RadarrQueue(NamedTuple):
     outputPath: str = None
     movie: RadarrMovie = None
     timeleft: str = None
+    customFormatScore: int = None
+    indexerFlags: int = None
+    added: str = None
+    downloadClientHasPostImportCategory: bool = None
 
 
 # Sickchill
