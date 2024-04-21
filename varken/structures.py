@@ -279,6 +279,12 @@ class SonarrEpisode(NamedTuple):
     sceneSeasonNumber: int = None
     series: SonarrTVShow = None
     tvdbId: int = None
+    finaleType: str = None
+    episodeFile: dict = None
+    endTime: str = None
+    grabTime: str = None
+    seriesTitle: str = None
+    images: list = None
 
 
 class SonarrQueue(NamedTuple):
