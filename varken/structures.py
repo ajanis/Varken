@@ -279,6 +279,12 @@ class SonarrEpisode(NamedTuple):
     sceneSeasonNumber: int = None
     series: SonarrTVShow = None
     tvdbId: int = None
+    finaleType: str = None
+    episodeFile: dict = None
+    endTime: str = None
+    grabTime: str = None
+    seriesTitle: str = None
+    images: list = None
 
 
 class SonarrQueue(NamedTuple):
@@ -348,6 +354,7 @@ class RadarrMovie(NamedTuple):
     originalLanguage: str = None
     addOptions: str = None
     popularity: str = None
+    rootFolderPath: str = None
 
 
 # Radarr Queue
@@ -374,6 +381,10 @@ class RadarrQueue(NamedTuple):
     outputPath: str = None
     movie: RadarrMovie = None
     timeleft: str = None
+    customFormatScore: int = None
+    indexerFlags: int = None
+    added: str = None
+    downloadClientHasPostImportCategory: bool = None
 
 
 # Sickchill
