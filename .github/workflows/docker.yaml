@@ -1,7 +1,7 @@
-name: varken
+name: Build Biggetje
 on:
-  schedule:
-    - cron: '0 10 * * *'
+#  schedule:
+#    - cron: '0 10 * * *'
   push:
     branches:
       - master
@@ -31,7 +31,7 @@ on:
         description: 'Ignore existing tag if "true"'
         required: false
 env:
-  IMAGES: boerderij/varken
+  IMAGES: mdhmatt/biggetje
   PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
 jobs:
   lint-and-test:

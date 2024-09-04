@@ -186,6 +186,7 @@ class OmbiMovieRequest(NamedTuple):
     markedAsDenied: str = None
     markedAsDenied4K: str = None
     overview: str = None
+    playedByUsersCount: int = None
     posterPath: str = None
     qualityOverride: int = None
     released: bool = None
@@ -204,6 +205,7 @@ class OmbiMovieRequest(NamedTuple):
     subscribed: bool = None
     theMovieDbId: int = None
     title: str = None
+    watchedByRequestedUser: str = None
 
 
 # Overseerr
