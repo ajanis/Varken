@@ -135,7 +135,7 @@ class QueuePages(BaseModel):
     sortKey: str = None
     sortDirection: str = None
     totalRecords: str = None
-    records: Optional[list] = field(default=None, init=None)
+    records: Optional[list] = field(default_factory=list, default=None, init=None)
 
 
 # Ombi Structures
@@ -154,7 +154,7 @@ class OmbiIssuesCounts(BaseModel):
 @dataclass
 class OmbiTVRequest(BaseModel):
     background: str = None
-    childRequests: Optional[list] = field(default=None, init=None)
+    childRequests: Optional[list] = field(default_factory=list, default=None, init=None)
     denied: bool = None
     deniedReason: None = None
     externalProviderId: str = None
@@ -211,7 +211,7 @@ class OmbiMovieRequest(BaseModel):
     requestedByAlias: str = None
     requestedDate: str = None
     requestedDate4k: str = None
-    requestedUser: Optional[dict] = field(default=None, init=None)
+    requestedUser: Optional[dict] = field(default_factory=dict, default=None, init=None)
     requestedUserId: str = None
     requestStatus: str = None
     requestType: int = None
@@ -243,14 +243,14 @@ class OverseerrRequestCounts(BaseModel):
 class SonarrTVShow(BaseModel):
     added: str = None
     airTime: str = None
-    alternateTitles: Optional[list] = field(default=None, init=None)
+    alternateTitles: Optional[list] = field(default_factory=list, default=None, init=None)
     certification: str = None
     cleanTitle: str = None
     ended: bool = None
     firstAired: str = None
-    genres: Optional[list] = field(default=None, init=None)
+    genres: Optional[list] = field(default_factory=list, default=None, init=None)
     id: int = None
-    images: Optional[list] = field(default=None, init=None)
+    images: Optional[list] = field(default_factory=list, default=None, init=None)
     imdbId: str = None
     languageProfileId: int = None
     monitored: bool = None
@@ -260,16 +260,16 @@ class SonarrTVShow(BaseModel):
     path: str = None
     previousAiring: str = None
     qualityProfileId: int = None
-    ratings: Optional[dict] = field(default=None, init=None)
+    ratings: Optional[dict] = field(default_factory=dict, default=None, init=None)
     rootFolderPath: str = None
     runtime: int = None
     seasonFolder: bool = None
-    seasons: Optional[list] = field(default=None, init=None)
+    seasons: Optional[list] = field(default_factory=list, default=None, init=None)
     seriesType: str = None
     sortTitle: str = None
-    statistics: Optional[dict] = field(default=None, init=None)
+    statistics: Optional[dict] = field(default_factory=dict, default=None, init=None)
     status: str = None
-    tags: Optional[list] = field(default=None, init=None)
+    tags: Optional[list] = field(default_factory=list, default=None, init=None)
     title: str = None
     titleSlug: str = None
     tvdbId: int = None
@@ -298,14 +298,14 @@ class SonarrEpisode(BaseModel):
     sceneAbsoluteEpisodeNumber: int = None
     sceneEpisodeNumber: int = None
     sceneSeasonNumber: int = None
-    series: Optional[SonarrTVShow] = field(default=None, init=None)
+    series: Optional[SonarrTVShow] = field(default_factory=SonarrTVShow, default=None, init=None)
     tvdbId: int = None
     finaleType: str = None
-    episodeFile: Optional[dict] = field(default=None, init=None)
+    episodeFile: Optional[dict] = field(default_factory=dict, default=None, init=None)
     endTime: str = None
     grabTime: str = None
     seriesTitle: str = None
-    images: Optional[list] = field(default=None, init=None)
+    images: Optional[list] = field(default_factory=list, default=None, init=None)
 
 @dataclass
 class SonarrQueue(BaseModel):
@@ -314,21 +314,21 @@ class SonarrQueue(BaseModel):
     episodeId: int = None
     id: int = None
     indexer: str = None
-    language: Optional[dict] = field(default=None, init=None)
+    language: Optional[dict] = field(default_factory=dict, default=None, init=None)
     protocol: str = None
-    quality: Optional[dict] = field(default=None, init=None)
+    quality: Optional[dict] = field(default_factory=dict, default=None, init=None)
     size: float = None
     sizeleft: float = None
     status: str = None
-    statusMessages: Optional[list] = field(default=None, init=None)
+    statusMessages: Optional[list] = field(default_factory=list, default=None, init=None)
     title: str = None
     trackedDownloadState: str = None
     trackedDownloadStatus: str = None
     seriesId: int = None
     errorMessage: str = None
     outputPath: str = None
-    series: Optional[SonarrTVShow] = field(default=None, init=None)
-    episode: Optional[SonarrEpisode] = field(default=None, init=None)
+    series: Optional[SonarrTVShow] = field(default_factory=SonarrTVShow, default=None, init=None)
+    episode: Optional[SonarrEpisode] = field(default_factory=SonarrEpisode, default=None, init=None)
     timeleft: str = None
     estimatedCompletionTime: str = None
 
@@ -337,28 +337,28 @@ class SonarrQueue(BaseModel):
 @dataclass
 class RadarrMovie(BaseModel):
     added: str = None
-    alternateTitles: Optional[list] = field(default=None, init=None)
+    alternateTitles: Optional[list] = field(default_factory=list, default=None, init=None)
     certification: str = None
     cleanTitle: str = None
-    collection: Optional[dict] = field(default=None, init=None)
+    collection: Optional[dict] = field(default_factory=dict, default=None, init=None)
     digitalRelease: str = None
     folderName: str = None
-    genres: Optional[list] = field(default=None, init=None)
+    genres: Optional[list] = field(default_factory=list, default=None, init=None)
     hasFile: bool = None
     id: int = None
-    images: Optional[list] = field(default=None, init=None)
+    images: Optional[list] = field(default_factory=list, default=None, init=None)
     imdbId: str = None
     inCinemas: str = None
     isAvailable: bool = None
     minimumAvailability: str = None
     monitored: bool = None
-    movieFile: Optional[dict] = field(default=None, init=None)
+    movieFile: Optional[dict] = field(default_factory=dict, default=None, init=None)
     originalTitle: str = None
     overview: str = None
     path: str = None
     physicalRelease: str = None
     qualityProfileId: int = None
-    ratings: Optional[dict] = field(default=None, init=None)
+    ratings: Optional[dict] = field(default_factory=dict, default=None, init=None)
     runtime: int = None
     secondaryYear: int = None
     secondaryYearSourceId: int = None
@@ -366,7 +366,7 @@ class RadarrMovie(BaseModel):
     sortTitle: str = None
     status: str = None
     studio: str = None
-    tags: Optional[list] = field(default=None, init=None)
+    tags: Optional[list] = field(default_factory=list, default=None, init=None)
     titleSlug: str = None
     tmdbId: int = None
     website: str = None
@@ -377,26 +377,26 @@ class RadarrMovie(BaseModel):
     addOptions: str = None
     popularity: str = None
     rootFolderPath: str = None
-    statistics: Optional[dict] = field(default=None, init=None)
+    statistics: Optional[dict] = field(default_factory=dict, default=None, init=None)
     movieFileId: int = None
 
 
 # Radarr Queue
 @dataclass
 class RadarrQueue(BaseModel):
-    customFormats: Optional[list] = field(default=None, init=None)
+    customFormats: Optional[list] = field(default_factory=list, default=None, init=None)
     downloadClient: str = None
     downloadId: str = None
     id: int = None
     indexer: str = None
-    languages: Optional[list] = field(default=None, init=None)
+    languages: Optional[list] = field(default_factory=list, default=None, init=None)
     movieId: int = None
     protocol: str = None
-    quality: Optional[dict] = field(default=None, init=None)
+    quality: Optional[dict] = field(default_factory=dict, default=None, init=None)
     size: float = None
     sizeleft: float = None
     status: str = None
-    statusMessages: Optional[list] = field(default=None, init=None)
+    statusMessages: Optional[list] = field(default_factory=list, default=None, init=None)
     title: str = None
     trackedDownloadState: str = None
     trackedDownloadStatus: str = None
@@ -404,7 +404,7 @@ class RadarrQueue(BaseModel):
     estimatedCompletionTime: str = None
     errorMessage: str = None
     outputPath: str = None
-    movie: Optional[RadarrMovie] = field(default=None, init=None)
+    movie: Optional[RadarrMovie] = field(default_factory=RadarrMovie, default=None, init=None)
     timeleft: str = None
     customFormatScore: int = None
     indexerFlags: int = None
@@ -434,7 +434,7 @@ class SickChillTVShow(BaseModel):
 # Tautulli
 @dataclass
 class TautulliStream(BaseModel):
-    actors: Optional[list] = field(default=None, init=None)
+    actors: Optional[list] = field(default_factory=list, default=None, init=None)
     added_at: str = None
     allow_guest: int = None
     art: str = None
@@ -459,14 +459,14 @@ class TautulliStream(BaseModel):
     channel_stream: int = None
     channel_title: str = None
     children_count: str = None
-    collections: Optional[list] = field(default=None, init=None)
+    collections: Optional[list] = field(default_factory=list, default=None, init=None)
     container: str = None
     content_rating: str = None
     current_session: str = None
     date: str = None
     deleted_user: int = None
     device: str = None
-    directors: Optional[list] = field(default=None, init=None)
+    directors: Optional[list] = field(default_factory=list, default=None, init=None)
     do_notify: int = None
     duration: str = None
     email: str = None
@@ -475,7 +475,7 @@ class TautulliStream(BaseModel):
     file_size: str = None
     friendly_name: str = None
     full_title: str = None
-    genres: Optional[list] = field(default=None, init=None)
+    genres: Optional[list] = field(default_factory=list, default=None, init=None)
     grandparent_guid: str = None
     grandparent_rating_key: str = None
     grandparent_thumb: str = None
@@ -493,7 +493,7 @@ class TautulliStream(BaseModel):
     is_home_user: int = None
     is_restricted: int = None
     keep_history: int = None
-    labels: Optional[list] = field(default=None, init=None)
+    labels: Optional[list] = field(default_factory=list, default=None, init=None)
     last_viewed_at: str = None
     library_name: str = None
     live: int = None
@@ -537,7 +537,7 @@ class TautulliStream(BaseModel):
     selected: int = None
     session_id: str = None
     session_key: str = None
-    shared_libraries: Optional[list] = field(default=None, init=None)
+    shared_libraries: Optional[list] = field(default_factory=list, default=None, init=None)
     sort_title: str = None
     started: int = None
     state: str = None
@@ -645,7 +645,7 @@ class TautulliStream(BaseModel):
     view_offset: str = None
     watched_status: int = None
     width: str = None
-    writers: Optional[list] = field(default=None, init=None)
+    writers: Optional[list] = field(default_factory=list, default=None, init=None)
     year: str = None
 
 
@@ -654,8 +654,8 @@ class TautulliStream(BaseModel):
 class LidarrQueue(BaseModel):
     artistId: int = None
     albumId: int = None
-    language: Optional[dict] = field(default=None, init=None)
-    quality: Optional[dict] = field(default=None, init=None)
+    language: Optional[dict] = field(default_factory=dict, default=None, init=None)
+    quality: Optional[dict] = field(default_factory=dict, default=None, init=None)
     size: float = None
     title: str = None
     timeleft: str = None
@@ -663,7 +663,7 @@ class LidarrQueue(BaseModel):
     status: str = None
     trackedDownloadStatus: str = None
     trackedDownloadState: str = None
-    statusMessages: Optional[list] = field(default=None, init=None)
+    statusMessages: Optional[list] = field(default_factory=list, default=None, init=None)
     errorMessage: str = None
     downloadId: str = None
     protocol: str = None
@@ -686,15 +686,15 @@ class LidarrAlbum(BaseModel):
     profileId: int = None
     duration: int = None
     albumType: str = None
-    secondaryTypes: Optional[list] = field(default=None, init=None)
+    secondaryTypes: Optional[list] = field(default_factory=list, default=None, init=None)
     mediumCount: int = None
-    ratings: Optional[dict] = field(default=None, init=None)
+    ratings: Optional[dict] = field(default_factory=dict, default=None, init=None)
     releaseDate: str = None
-    releases: Optional[list] = field(default=None, init=None)
-    genres: Optional[list] = field(default=None, init=None)
-    media: Optional[list] = field(default=None, init=None)
-    artist: Optional[dict] = field(default=None, init=None)
-    images: Optional[list] = field(default=None, init=None)
-    links: Optional[list] = field(default=None, init=None)
-    statistics: dict = field(default={}, init=None)
+    releases: Optional[list] = field(default_factory=list, default=None, init=None)
+    genres: Optional[list] = field(default_factory=list, default=None, init=None)
+    media: Optional[list] = field(default_factory=list, default=None, init=None)
+    artist: Optional[dict] = field(default_factory=dict, default=None, init=None)
+    images: Optional[list] = field(default_factory=list, default=None, init=None)
+    links: Optional[list] = field(default_factory=list, default=None, init=None)
+    statistics: dict = field(default_factory=dict, default={}, init=None)
     id: int = None
