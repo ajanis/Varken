@@ -10,21 +10,62 @@ if version_info < (3, 6, 2):
     exit(1)
 
 
-class BaseModel:
-    """Base class to handle dynamic fields from APIs."""
-    _field_defaults = {}
+class FieldDefaultsMeta(type):
+    """Metaclass for applying defaults to fields."""
     
-    def __init__(self, **kwargs):
-        if len(self._field_defaults.keys()) == 0:
-            for key, value in self.__dict__.items():
-                self._field_defaults[key] = value
+    def __new__(cls, name, bases, dct):
+        """Initialize the new class."""
+        new_cls = super().__new__(cls, name, bases, dct)
+        
+        # Gather field defaults from class attributes
+        field_defaults = {}
+        
+        for key, value in dct.items():
+            # Ignore special methods and internal attributes
+            if not key.startswith('__') and not callable(value):
+                field_defaults[key] = value
+        
+        # Attach the field defaults to the new class
+        new_cls._field_defaults = field_defaults
+        
+        return new_cls
 
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the object to a dictionary, including dynamic fields."""
-        return self.__dict__
+class BaseModel(metaclass=FieldDefaultsMeta):
+    """Base class to handle dynamic fields from APIs."""
+
+    def __init__(self, *args, **kwargs):
+        # Ensure the number of positional arguments does not exceed defined fields
+        field_names = list(self.__annotations__.keys())
+        total_fields = len(field_names)
+        provided_args = len(args)
+
+        # Assign positional arguments
+        for idx, arg in enumerate(args):
+            setattr(self, field_names[idx], arg)
+
+        # Assign keyword arguments or use default values from _field_defaults
+        for field_name in field_names[provided_args:]:
+            if field_name in kwargs:
+                setattr(self, field_name, kwargs[field_name])
+            else:
+                # Use default from _field_defaults, or None if not provided
+                setattr(self, field_name, self._field_defaults.get(field_name))
+
+        # Make the instance immutable by setting __setattr__
+        self._make_immutable()
+
+    def _make_immutable(self):
+        """Make the instance immutable by preventing attribute setting."""
+        def readonly_setattr(self, name, value):
+            raise AttributeError(f"Cannot modify attribute '{name}' once set")
+
+        self.__setattr__ = readonly_setattr
+
+    def __repr__(self):
+        """Provide a readable representation of the object."""
+        field_reprs = ', '.join(f"{name}={getattr(self, name)!r}" for name in self.__dict__)
+        return f"{self.__class__.__name__}({field_reprs})"
 
 
 # Server Structures
