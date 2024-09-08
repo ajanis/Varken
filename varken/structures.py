@@ -19,7 +19,7 @@ class BaseModel:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the object to a dictionary, including dynamic fields."""
         return self.__dict__
 
