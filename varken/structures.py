@@ -1,7 +1,7 @@
 from sys import version_info
 from typing import NamedTuple, Optional
 from logging import getLogger
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 logger = getLogger('temp')
 # Check for python3.6 or newer to resolve erroneous typing.NamedTuple issues
