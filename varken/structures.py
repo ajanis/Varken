@@ -12,8 +12,13 @@ if version_info < (3, 6, 2):
 
 class BaseModel:
     """Base class to handle dynamic fields from APIs."""
+    _field_defaults = {}
     
     def __init__(self, **kwargs):
+        if len(self._field_defaults.keys()) == 0:
+            for key, value in self.__dict__.items():
+                self._field_defaults[key] = value
+
         for key, value in kwargs.items():
             setattr(self, key, value)
 
