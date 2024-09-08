@@ -52,7 +52,7 @@ class TautulliAPI(object):
 
             try:
                 geodata = self.geoiphandler.lookup(session.ip_address_public)
-            except (ValueError, AddressNotFoundError):
+            except (ValueError, AttributeError, AddressNotFoundError):
                 self.logger.debug('Public IP missing for Tautulli session...')
                 if not self.my_ip:
                     # Try the fallback ip in the config file
