@@ -1,6 +1,7 @@
 from sys import version_info
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 from logging import getLogger
+from dataclasses import dataclass
 
 logger = getLogger('temp')
 # Check for python3.6 or newer to resolve erroneous typing.NamedTuple issues
@@ -10,8 +11,22 @@ if version_info < (3, 6, 2):
     exit(1)
 
 
+@dataclass
+class BaseModel:
+    """Base class to handle dynamic fields from APIs."""
+    
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert the object to a dictionary, including dynamic fields."""
+        return self.__dict__
+
+
 # Server Structures
-class InfluxServer(NamedTuple):
+@dataclass
+class InfluxServer(BaseModel):
     password: str = 'root'
     port: int = 8086
     ssl: bool = False
@@ -20,8 +35,8 @@ class InfluxServer(NamedTuple):
     verify_ssl: bool = False
     org: str = '-'
 
-
-class Influx2Server(NamedTuple):
+@dataclass
+class Influx2Server(BaseModel):
     url: str = 'localhost'
     org: str = 'server'
     token: str = 'TOKEN'
@@ -30,8 +45,8 @@ class Influx2Server(NamedTuple):
     ssl: bool = False
     verify_ssl: bool = False
 
-
-class SonarrServer(NamedTuple):
+@dataclass
+class SonarrServer(BaseModel):
     api_key: str = None
     future_days: int = 0
     future_days_run_seconds: int = 30
@@ -43,8 +58,8 @@ class SonarrServer(NamedTuple):
     url: str = None
     verify_ssl: bool = False
 
-
-class RadarrServer(NamedTuple):
+@dataclass
+class RadarrServer(BaseModel):
     api_key: str = None
     get_missing: bool = False
     get_missing_run_seconds: int = 30
@@ -54,8 +69,8 @@ class RadarrServer(NamedTuple):
     url: str = None
     verify_ssl: bool = False
 
-
-class OmbiServer(NamedTuple):
+@dataclass
+class OmbiServer(BaseModel):
     api_key: str = None
     id: int = None
     issue_status_counts: bool = False
@@ -67,8 +82,8 @@ class OmbiServer(NamedTuple):
     url: str = None
     verify_ssl: bool = False
 
-
-class OverseerrServer(NamedTuple):
+@dataclass
+class OverseerrServer(BaseModel):
     api_key: str = None
     id: int = None
     url: str = None
@@ -78,8 +93,8 @@ class OverseerrServer(NamedTuple):
     num_latest_requests_to_fetch: int = 10
     num_latest_requests_seconds: int = 30
 
-
-class TautulliServer(NamedTuple):
+@dataclass
+class TautulliServer(BaseModel):
     api_key: str = None
     fallback_ip: str = None
     get_activity: bool = False
@@ -91,8 +106,8 @@ class TautulliServer(NamedTuple):
     verify_ssl: bool = None
     maxmind_license_key: str = None
 
-
-class SickChillServer(NamedTuple):
+@dataclass
+class SickChillServer(BaseModel):
     api_key: str = None
     get_missing: bool = False
     get_missing_run_seconds: int = 30
@@ -100,8 +115,8 @@ class SickChillServer(NamedTuple):
     url: str = None
     verify_ssl: bool = False
 
-
-class UniFiServer(NamedTuple):
+@dataclass
+class UniFiServer(BaseModel):
     get_usg_stats_run_seconds: int = 30
     id: int = None
     password: str = 'ubnt'
@@ -113,31 +128,33 @@ class UniFiServer(NamedTuple):
 
 
 # Shared
-class QueuePages(NamedTuple):
+@dataclass
+class QueuePages(BaseModel):
     page: int = None
     pageSize: int = None
     sortKey: str = None
     sortDirection: str = None
     totalRecords: str = None
-    records: list = None
+    records: Optional[list] = field(default=None, init=None)
 
 
 # Ombi Structures
-class OmbiRequestCounts(NamedTuple):
+@dataclass
+class OmbiRequestCounts(BaseModel):
     approved: int = 0
     available: int = 0
     pending: int = 0
 
-
-class OmbiIssuesCounts(NamedTuple):
+@dataclass
+class OmbiIssuesCounts(BaseModel):
     inProgress: int = 0
     pending: int = 0
     resolved: int = 0
 
-
-class OmbiTVRequest(NamedTuple):
+@dataclass
+class OmbiTVRequest(BaseModel):
     background: str = None
-    childRequests: list = None
+    childRequests: Optional[list] = field(default=None, init=None)
     denied: bool = None
     deniedReason: None = None
     externalProviderId: str = None
@@ -157,8 +174,8 @@ class OmbiTVRequest(NamedTuple):
     requestedByAlias: str = None
     requestStatus: str = None
 
-
-class OmbiMovieRequest(NamedTuple):
+@dataclass
+class OmbiMovieRequest(BaseModel):
     approved: bool = None
     approved4K: bool = None
     available: bool = None
@@ -194,7 +211,7 @@ class OmbiMovieRequest(NamedTuple):
     requestedByAlias: str = None
     requestedDate: str = None
     requestedDate4k: str = None
-    requestedUser: dict = None
+    requestedUser: Optional[dict] = field(default=None, init=None)
     requestedUserId: str = None
     requestStatus: str = None
     requestType: int = None
@@ -209,7 +226,8 @@ class OmbiMovieRequest(NamedTuple):
 
 
 # Overseerr
-class OverseerrRequestCounts(NamedTuple):
+@dataclass
+class OverseerrRequestCounts(BaseModel):
     pending: int = None
     approved: int = None
     processing: int = None
@@ -221,17 +239,18 @@ class OverseerrRequestCounts(NamedTuple):
 
 
 # Sonarr
-class SonarrTVShow(NamedTuple):
+@dataclass
+class SonarrTVShow(BaseModel):
     added: str = None
     airTime: str = None
-    alternateTitles: list = None
+    alternateTitles: Optional[list] = field(default=None, init=None)
     certification: str = None
     cleanTitle: str = None
     ended: bool = None
     firstAired: str = None
-    genres: list = None
+    genres: Optional[list] = field(default=None, init=None)
     id: int = None
-    images: list = None
+    images: Optional[list] = field(default=None, init=None)
     imdbId: str = None
     languageProfileId: int = None
     monitored: bool = None
@@ -241,16 +260,16 @@ class SonarrTVShow(NamedTuple):
     path: str = None
     previousAiring: str = None
     qualityProfileId: int = None
-    ratings: dict = None
+    ratings: Optional[dict] = field(default=None, init=None)
     rootFolderPath: str = None
     runtime: int = None
     seasonFolder: bool = None
-    seasons: list = None
+    seasons: Optional[list] = field(default=None, init=None)
     seriesType: str = None
     sortTitle: str = None
-    statistics: dict = None
+    statistics: Optional[dict] = field(default=None, init=None)
     status: str = None
-    tags: list = None
+    tags: Optional[list] = field(default=None, init=None)
     title: str = None
     titleSlug: str = None
     tvdbId: int = None
@@ -259,8 +278,8 @@ class SonarrTVShow(NamedTuple):
     useSceneNumbering: bool = None
     year: int = None
 
-
-class SonarrEpisode(NamedTuple):
+@dataclass
+class SonarrEpisode(BaseModel):
     absoluteEpisodeNumber: int = None
     airDate: str = None
     airDateUtc: str = None
@@ -279,66 +298,67 @@ class SonarrEpisode(NamedTuple):
     sceneAbsoluteEpisodeNumber: int = None
     sceneEpisodeNumber: int = None
     sceneSeasonNumber: int = None
-    series: SonarrTVShow = None
+    series: Optional[SonarrTVShow] = field(default=None, init=None)
     tvdbId: int = None
     finaleType: str = None
-    episodeFile: dict = None
+    episodeFile: Optional[dict] = field(default=None, init=None)
     endTime: str = None
     grabTime: str = None
     seriesTitle: str = None
-    images: list = None
+    images: Optional[list] = field(default=None, init=None)
 
-
-class SonarrQueue(NamedTuple):
+@dataclass
+class SonarrQueue(BaseModel):
     downloadClient: str = None
     downloadId: str = None
     episodeId: int = None
     id: int = None
     indexer: str = None
-    language: dict = None
+    language: Optional[dict] = field(default=None, init=None)
     protocol: str = None
-    quality: dict = None
+    quality: Optional[dict] = field(default=None, init=None)
     size: float = None
     sizeleft: float = None
     status: str = None
-    statusMessages: list = None
+    statusMessages: Optional[list] = field(default=None, init=None)
     title: str = None
     trackedDownloadState: str = None
     trackedDownloadStatus: str = None
     seriesId: int = None
     errorMessage: str = None
     outputPath: str = None
-    series: SonarrTVShow = None
-    episode: SonarrEpisode = None
+    series: Optional[SonarrTVShow] = field(default=None, init=None)
+    episode: Optional[SonarrEpisode] = field(default=None, init=None)
     timeleft: str = None
     estimatedCompletionTime: str = None
 
 
 # Radarr
-class RadarrMovie(NamedTuple):
+@dataclass
+class RadarrMovie(BaseModel):
     added: str = None
-    alternateTitles: list = None
+    alternateTitles: Optional[list] = field(default=None, init=None)
     certification: str = None
     cleanTitle: str = None
-    collection: dict = None
+    collection: Optional[dict] = field(default=None, init=None)
     digitalRelease: str = None
     folderName: str = None
-    genres: list = None
+    genres: Optional[list] = field(default=None, init=None)
     hasFile: bool = None
     id: int = None
-    images: list = None
+    images: Optional[list] = field(default=None, init=None)
     imdbId: str = None
     inCinemas: str = None
     isAvailable: bool = None
     minimumAvailability: str = None
     monitored: bool = None
-    movieFile: dict = None
+    movieFile: Optional[dict] = field(default=None, init=None)
     originalTitle: str = None
     overview: str = None
     path: str = None
     physicalRelease: str = None
     qualityProfileId: int = None
-    ratings: dict = None
+    ratings: Optional[dict] = field(default=None, init=None)
     runtime: int = None
     secondaryYear: int = None
     secondaryYearSourceId: int = None
@@ -346,7 +366,7 @@ class RadarrMovie(NamedTuple):
     sortTitle: str = None
     status: str = None
     studio: str = None
-    tags: list = None
+    tags: Optional[list] = field(default=None, init=None)
     titleSlug: str = None
     tmdbId: int = None
     website: str = None
@@ -357,23 +377,26 @@ class RadarrMovie(NamedTuple):
     addOptions: str = None
     popularity: str = None
     rootFolderPath: str = None
+    statistics: Optional[dict] = field(default=None, init=None)
+    movieFileId: int = None
 
 
 # Radarr Queue
-class RadarrQueue(NamedTuple):
-    customFormats: list = None
+@dataclass
+class RadarrQueue(BaseModel):
+    customFormats: Optional[list] = field(default=None, init=None)
     downloadClient: str = None
     downloadId: str = None
     id: int = None
     indexer: str = None
-    languages: list = None
+    languages: Optional[list] = field(default=None, init=None)
     movieId: int = None
     protocol: str = None
-    quality: dict = None
+    quality: Optional[dict] = field(default=None, init=None)
     size: float = None
     sizeleft: float = None
     status: str = None
-    statusMessages: list = None
+    statusMessages: Optional[list] = field(default=None, init=None)
     title: str = None
     trackedDownloadState: str = None
     trackedDownloadStatus: str = None
@@ -381,7 +404,7 @@ class RadarrQueue(NamedTuple):
     estimatedCompletionTime: str = None
     errorMessage: str = None
     outputPath: str = None
-    movie: RadarrMovie = None
+    movie: Optional[RadarrMovie] = field(default=None, init=None)
     timeleft: str = None
     customFormatScore: int = None
     indexerFlags: int = None
@@ -390,7 +413,8 @@ class RadarrQueue(NamedTuple):
 
 
 # Sickchill
-class SickChillTVShow(NamedTuple):
+@dataclass
+class SickChillTVShow(BaseModel):
     airdate: str = None
     airs: str = None
     episode: int = None
@@ -408,8 +432,9 @@ class SickChillTVShow(NamedTuple):
 
 
 # Tautulli
-class TautulliStream(NamedTuple):
-    actors: list = None
+@dataclass
+class TautulliStream(BaseModel):
+    actors: Optional[list] = field(default=None, init=None)
     added_at: str = None
     allow_guest: int = None
     art: str = None
@@ -434,14 +459,14 @@ class TautulliStream(NamedTuple):
     channel_stream: int = None
     channel_title: str = None
     children_count: str = None
-    collections: list = None
+    collections: Optional[list] = field(default=None, init=None)
     container: str = None
     content_rating: str = None
     current_session: str = None
     date: str = None
     deleted_user: int = None
     device: str = None
-    directors: list = None
+    directors: Optional[list] = field(default=None, init=None)
     do_notify: int = None
     duration: str = None
     email: str = None
@@ -450,7 +475,7 @@ class TautulliStream(NamedTuple):
     file_size: str = None
     friendly_name: str = None
     full_title: str = None
-    genres: list = None
+    genres: Optional[list] = field(default=None, init=None)
     grandparent_guid: str = None
     grandparent_rating_key: str = None
     grandparent_thumb: str = None
@@ -468,7 +493,7 @@ class TautulliStream(NamedTuple):
     is_home_user: int = None
     is_restricted: int = None
     keep_history: int = None
-    labels: list = None
+    labels: Optional[list] = field(default=None, init=None)
     last_viewed_at: str = None
     library_name: str = None
     live: int = None
@@ -512,7 +537,7 @@ class TautulliStream(NamedTuple):
     selected: int = None
     session_id: str = None
     session_key: str = None
-    shared_libraries: list = None
+    shared_libraries: Optional[list] = field(default=None, init=None)
     sort_title: str = None
     started: int = None
     state: str = None
@@ -620,16 +645,17 @@ class TautulliStream(NamedTuple):
     view_offset: str = None
     watched_status: int = None
     width: str = None
-    writers: list = None
+    writers: Optional[list] = field(default=None, init=None)
     year: str = None
 
 
 # Lidarr
-class LidarrQueue(NamedTuple):
+@dataclass
+class LidarrQueue(BaseModel):
     artistId: int = None
     albumId: int = None
-    language: dict = None
-    quality: dict = None
+    language: Optional[dict] = field(default=None, init=None)
+    quality: Optional[dict] = field(default=None, init=None)
     size: float = None
     title: str = None
     timeleft: str = None
@@ -637,7 +663,7 @@ class LidarrQueue(NamedTuple):
     status: str = None
     trackedDownloadStatus: str = None
     trackedDownloadState: str = None
-    statusMessages: list = None
+    statusMessages: Optional[list] = field(default=None, init=None)
     errorMessage: str = None
     downloadId: str = None
     protocol: str = None
@@ -648,8 +674,8 @@ class LidarrQueue(NamedTuple):
     id: int = None
     estimatedCompletionTime: str = None
 
-
-class LidarrAlbum(NamedTuple):
+@dataclass
+class LidarrAlbum(BaseModel):
     title: str = None
     disambiguation: str = None
     overview: str = None
@@ -660,15 +686,15 @@ class LidarrAlbum(NamedTuple):
     profileId: int = None
     duration: int = None
     albumType: str = None
-    secondaryTypes: list = None
+    secondaryTypes: Optional[list] = field(default=None, init=None)
     mediumCount: int = None
-    ratings: dict = None
+    ratings: Optional[dict] = field(default=None, init=None)
     releaseDate: str = None
-    releases: list = None
-    genres: list = None
-    media: list = None
-    artist: dict = None
-    images: list = None
-    links: list = None
-    statistics: dict = {}
+    releases: Optional[list] = field(default=None, init=None)
+    genres: Optional[list] = field(default=None, init=None)
+    media: Optional[list] = field(default=None, init=None)
+    artist: Optional[dict] = field(default=None, init=None)
+    images: Optional[list] = field(default=None, init=None)
+    links: Optional[list] = field(default=None, init=None)
+    statistics: dict = field(default={}, init=None)
     id: int = None
