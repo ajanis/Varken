@@ -1,5 +1,5 @@
 from sys import version_info
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Any
 from logging import getLogger
 from dataclasses import dataclass, field
 
