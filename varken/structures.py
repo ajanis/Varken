@@ -1,7 +1,6 @@
 from sys import version_info
 from typing import NamedTuple, Optional, Any
 from logging import getLogger
-from dataclasses import dataclass, field
 
 logger = getLogger('temp')
 # Check for python3.6 or newer to resolve erroneous typing.NamedTuple issues
@@ -24,7 +23,6 @@ class BaseModel:
 
 
 # Server Structures
-@dataclass
 class InfluxServer(BaseModel):
     password: str = 'root'
     port: int = 8086
@@ -34,7 +32,6 @@ class InfluxServer(BaseModel):
     verify_ssl: bool = False
     org: str = '-'
 
-@dataclass
 class Influx2Server(BaseModel):
     url: str = 'localhost'
     org: str = 'server'
@@ -44,7 +41,6 @@ class Influx2Server(BaseModel):
     ssl: bool = False
     verify_ssl: bool = False
 
-@dataclass
 class SonarrServer(BaseModel):
     api_key: str = None
     future_days: int = 0
@@ -57,7 +53,6 @@ class SonarrServer(BaseModel):
     url: str = None
     verify_ssl: bool = False
 
-@dataclass
 class RadarrServer(BaseModel):
     api_key: str = None
     get_missing: bool = False
@@ -68,7 +63,6 @@ class RadarrServer(BaseModel):
     url: str = None
     verify_ssl: bool = False
 
-@dataclass
 class OmbiServer(BaseModel):
     api_key: str = None
     id: int = None
@@ -81,7 +75,6 @@ class OmbiServer(BaseModel):
     url: str = None
     verify_ssl: bool = False
 
-@dataclass
 class OverseerrServer(BaseModel):
     api_key: str = None
     id: int = None
@@ -92,7 +85,6 @@ class OverseerrServer(BaseModel):
     num_latest_requests_to_fetch: int = 10
     num_latest_requests_seconds: int = 30
 
-@dataclass
 class TautulliServer(BaseModel):
     api_key: str = None
     fallback_ip: str = None
@@ -105,7 +97,6 @@ class TautulliServer(BaseModel):
     verify_ssl: bool = None
     maxmind_license_key: str = None
 
-@dataclass
 class SickChillServer(BaseModel):
     api_key: str = None
     get_missing: bool = False
@@ -114,7 +105,6 @@ class SickChillServer(BaseModel):
     url: str = None
     verify_ssl: bool = False
 
-@dataclass
 class UniFiServer(BaseModel):
     get_usg_stats_run_seconds: int = 30
     id: int = None
@@ -127,7 +117,6 @@ class UniFiServer(BaseModel):
 
 
 # Shared
-@dataclass
 class QueuePages(BaseModel):
     page: int = None
     pageSize: int = None
@@ -138,19 +127,16 @@ class QueuePages(BaseModel):
 
 
 # Ombi Structures
-@dataclass
 class OmbiRequestCounts(BaseModel):
     approved: int = 0
     available: int = 0
     pending: int = 0
 
-@dataclass
 class OmbiIssuesCounts(BaseModel):
     inProgress: int = 0
     pending: int = 0
     resolved: int = 0
 
-@dataclass
 class OmbiTVRequest(BaseModel):
     background: str = None
     childRequests: Optional[list] = None
@@ -173,7 +159,6 @@ class OmbiTVRequest(BaseModel):
     requestedByAlias: str = None
     requestStatus: str = None
 
-@dataclass
 class OmbiMovieRequest(BaseModel):
     approved: bool = None
     approved4K: bool = None
@@ -225,7 +210,6 @@ class OmbiMovieRequest(BaseModel):
 
 
 # Overseerr
-@dataclass
 class OverseerrRequestCounts(BaseModel):
     pending: int = None
     approved: int = None
@@ -238,7 +222,6 @@ class OverseerrRequestCounts(BaseModel):
 
 
 # Sonarr
-@dataclass
 class SonarrTVShow(BaseModel):
     added: str = None
     airTime: str = None
@@ -277,7 +260,6 @@ class SonarrTVShow(BaseModel):
     useSceneNumbering: bool = None
     year: int = None
 
-@dataclass
 class SonarrEpisode(BaseModel):
     absoluteEpisodeNumber: int = None
     airDate: str = None
@@ -306,7 +288,6 @@ class SonarrEpisode(BaseModel):
     seriesTitle: str = None
     images: Optional[list] = None
 
-@dataclass
 class SonarrQueue(BaseModel):
     downloadClient: str = None
     downloadId: str = None
@@ -333,7 +314,6 @@ class SonarrQueue(BaseModel):
 
 
 # Radarr
-@dataclass
 class RadarrMovie(BaseModel):
     added: str = None
     alternateTitles: Optional[list] = None
@@ -381,7 +361,6 @@ class RadarrMovie(BaseModel):
 
 
 # Radarr Queue
-@dataclass
 class RadarrQueue(BaseModel):
     customFormats: Optional[list] = None
     downloadClient: str = None
@@ -412,7 +391,6 @@ class RadarrQueue(BaseModel):
 
 
 # Sickchill
-@dataclass
 class SickChillTVShow(BaseModel):
     airdate: str = None
     airs: str = None
@@ -431,7 +409,6 @@ class SickChillTVShow(BaseModel):
 
 
 # Tautulli
-@dataclass
 class TautulliStream(BaseModel):
     actors: Optional[list] = None
     added_at: str = None
@@ -649,7 +626,6 @@ class TautulliStream(BaseModel):
 
 
 # Lidarr
-@dataclass
 class LidarrQueue(BaseModel):
     artistId: int = None
     albumId: int = None
@@ -673,7 +649,6 @@ class LidarrQueue(BaseModel):
     id: int = None
     estimatedCompletionTime: str = None
 
-@dataclass
 class LidarrAlbum(BaseModel):
     title: str = None
     disambiguation: str = None
