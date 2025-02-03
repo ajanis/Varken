@@ -1,5 +1,5 @@
 from sys import version_info
-from typing import NamedTuple
+from dataclasses import dataclass, field
 from logging import getLogger
 
 logger = getLogger('temp')
@@ -10,17 +10,22 @@ if version_info < (3, 6, 2):
     exit(1)
 
 
-class FlexibleNamedTuple(NamedTuple):
-    def __new__(cls, *args, **kwargs):
-        obj = super().__new__(cls)
-        extra = {k: v for k, v in kwargs.items() if k not in cls._fields}
-        for key, value in extra.items():
-            setattr(obj, key, value)
-        return obj
+@dataclass
+class FlexibleResponse:
+    def __init__(self, **kwargs):
+        predefined_fields = {f.name for f in fields(self) if f.init}
+        for key in predefined_fields:
+            setattr(self, key, kwargs.pop(key, None))  # Assign known fields
+
+        # Handle dynamic fields
+        extra_fields = kwargs
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 # Server Structures
-class InfluxServer(FlexibleNamedTuple):
+@dataclass
+class InfluxServer(FlexibleResponse):
     password: str = 'root'
     port: int = 8086
     ssl: bool = False
@@ -30,7 +35,8 @@ class InfluxServer(FlexibleNamedTuple):
     org: str = '-'
 
 
-class Influx2Server(FlexibleNamedTuple):
+@dataclass
+class Influx2Server(FlexibleResponse):
     url: str = 'localhost'
     org: str = 'server'
     token: str = 'TOKEN'
@@ -40,7 +46,8 @@ class Influx2Server(FlexibleNamedTuple):
     verify_ssl: bool = False
 
 
-class SonarrServer(FlexibleNamedTuple):
+@dataclass
+class SonarrServer(FlexibleResponse):
     api_key: str = None
     future_days: int = 0
     future_days_run_seconds: int = 30
@@ -53,7 +60,8 @@ class SonarrServer(FlexibleNamedTuple):
     verify_ssl: bool = False
 
 
-class RadarrServer(FlexibleNamedTuple):
+@dataclass
+class RadarrServer(FlexibleResponse):
     api_key: str = None
     get_missing: bool = False
     get_missing_run_seconds: int = 30
@@ -64,7 +72,8 @@ class RadarrServer(FlexibleNamedTuple):
     verify_ssl: bool = False
 
 
-class OmbiServer(FlexibleNamedTuple):
+@dataclass
+class OmbiServer(FlexibleResponse):
     api_key: str = None
     id: int = None
     issue_status_counts: bool = False
@@ -77,7 +86,8 @@ class OmbiServer(FlexibleNamedTuple):
     verify_ssl: bool = False
 
 
-class OverseerrServer(FlexibleNamedTuple):
+@dataclass
+class OverseerrServer(FlexibleResponse):
     api_key: str = None
     id: int = None
     url: str = None
@@ -88,7 +98,8 @@ class OverseerrServer(FlexibleNamedTuple):
     num_latest_requests_seconds: int = 30
 
 
-class TautulliServer(FlexibleNamedTuple):
+@dataclass
+class TautulliServer(FlexibleResponse):
     api_key: str = None
     fallback_ip: str = None
     get_activity: bool = False
@@ -101,7 +112,8 @@ class TautulliServer(FlexibleNamedTuple):
     maxmind_license_key: str = None
 
 
-class SickChillServer(FlexibleNamedTuple):
+@dataclass
+class SickChillServer(FlexibleResponse):
     api_key: str = None
     get_missing: bool = False
     get_missing_run_seconds: int = 30
@@ -110,7 +122,8 @@ class SickChillServer(FlexibleNamedTuple):
     verify_ssl: bool = False
 
 
-class UniFiServer(FlexibleNamedTuple):
+@dataclass
+class UniFiServer(FlexibleResponse):
     get_usg_stats_run_seconds: int = 30
     id: int = None
     password: str = 'ubnt'
@@ -122,7 +135,8 @@ class UniFiServer(FlexibleNamedTuple):
 
 
 # Shared
-class QueuePages(FlexibleNamedTuple):
+@dataclass
+class QueuePages(FlexibleResponse):
     page: int = None
     pageSize: int = None
     sortKey: str = None
@@ -132,19 +146,22 @@ class QueuePages(FlexibleNamedTuple):
 
 
 # Ombi Structures
-class OmbiRequestCounts(FlexibleNamedTuple):
+@dataclass
+class OmbiRequestCounts(FlexibleResponse):
     approved: int = 0
     available: int = 0
     pending: int = 0
 
 
-class OmbiIssuesCounts(FlexibleNamedTuple):
+@dataclass
+class OmbiIssuesCounts(FlexibleResponse):
     inProgress: int = 0
     pending: int = 0
     resolved: int = 0
 
 
-class OmbiTVRequest(FlexibleNamedTuple):
+@dataclass
+class OmbiTVRequest(FlexibleResponse):
     background: str = None
     childRequests: list = None
     denied: bool = None
@@ -167,7 +184,8 @@ class OmbiTVRequest(FlexibleNamedTuple):
     requestStatus: str = None
 
 
-class OmbiMovieRequest(FlexibleNamedTuple):
+@dataclass
+class OmbiMovieRequest(FlexibleResponse):
     approved: bool = None
     approved4K: bool = None
     available: bool = None
@@ -218,7 +236,8 @@ class OmbiMovieRequest(FlexibleNamedTuple):
 
 
 # Overseerr
-class OverseerrRequestCounts(FlexibleNamedTuple):
+@dataclass
+class OverseerrRequestCounts(FlexibleResponse):
     pending: int = None
     approved: int = None
     processing: int = None
@@ -230,7 +249,8 @@ class OverseerrRequestCounts(FlexibleNamedTuple):
 
 
 # Sonarr
-class SonarrTVShow(FlexibleNamedTuple):
+@dataclass
+class SonarrTVShow(FlexibleResponse):
     added: str = None
     airTime: str = None
     alternateTitles: list = None
@@ -270,7 +290,8 @@ class SonarrTVShow(FlexibleNamedTuple):
     originalLanguage: str = None
 
 
-class SonarrEpisode(FlexibleNamedTuple):
+@dataclass
+class SonarrEpisode(FlexibleResponse):
     absoluteEpisodeNumber: int = None
     airDate: str = None
     airDateUtc: str = None
@@ -300,7 +321,8 @@ class SonarrEpisode(FlexibleNamedTuple):
     lastSearchTime: str = None
 
 
-class SonarrQueue(FlexibleNamedTuple):
+@dataclass
+class SonarrQueue(FlexibleResponse):
     downloadClient: str = None
     downloadId: str = None
     episodeId: int = None
@@ -333,7 +355,8 @@ class SonarrQueue(FlexibleNamedTuple):
 
 
 # Radarr
-class RadarrMovie(FlexibleNamedTuple):
+@dataclass
+class RadarrMovie(FlexibleResponse):
     added: str = None
     alternateTitles: list = None
     certification: str = None
@@ -378,7 +401,8 @@ class RadarrMovie(FlexibleNamedTuple):
 
 
 # Radarr Queue
-class RadarrQueue(FlexibleNamedTuple):
+@dataclass
+class RadarrQueue(FlexibleResponse):
     customFormats: list = None
     downloadClient: str = None
     downloadId: str = None
@@ -408,7 +432,8 @@ class RadarrQueue(FlexibleNamedTuple):
 
 
 # Sickchill
-class SickChillTVShow(FlexibleNamedTuple):
+@dataclass
+class SickChillTVShow(FlexibleResponse):
     airdate: str = None
     airs: str = None
     episode: int = None
@@ -426,7 +451,8 @@ class SickChillTVShow(FlexibleNamedTuple):
 
 
 # Tautulli
-class TautulliStream(FlexibleNamedTuple):
+@dataclass
+class TautulliStream(FlexibleResponse):
     actors: list = None
     added_at: str = None
     allow_guest: int = None
@@ -643,7 +669,8 @@ class TautulliStream(FlexibleNamedTuple):
 
 
 # Lidarr
-class LidarrQueue(FlexibleNamedTuple):
+@dataclass
+class LidarrQueue(FlexibleResponse):
     artistId: int = None
     albumId: int = None
     language: dict = None
@@ -667,7 +694,8 @@ class LidarrQueue(FlexibleNamedTuple):
     estimatedCompletionTime: str = None
 
 
-class LidarrAlbum(FlexibleNamedTuple):
+@dataclass
+class LidarrAlbum(FlexibleResponse):
     title: str = None
     disambiguation: str = None
     overview: str = None
