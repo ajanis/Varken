@@ -2,7 +2,7 @@ from sys import version_info
 from typing import NamedTuple, Optional, Any
 from logging import getLogger
 
-logger = getLogger('temp')
+logger = getLogger('structures')
 # Check for python3.6 or newer to resolve erroneous typing.NamedTuple issues
 if version_info < (3, 6, 2):
     logger.error('Varken requires python3.6.2 or newer. You are on python%s.%s.%s - Exiting...',
