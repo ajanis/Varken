@@ -18,7 +18,6 @@ class FlexibleResponse:
             setattr(self, key, kwargs.pop(key, None))  # Assign known fields
 
         # Handle dynamic fields
-        extra_fields = kwargs
         for key, value in kwargs.items():
             setattr(self, key, value)
 
