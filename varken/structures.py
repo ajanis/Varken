@@ -1,8 +1,8 @@
 from sys import version_info
-from typing import NamedTuple, Optional, Any
+from typing import Optional
 from logging import getLogger
 
-logger = getLogger('structures')
+logger = getLogger('temp')
 # Check for python3.6 or newer to resolve erroneous typing.NamedTuple issues
 if version_info < (3, 6, 2):
     logger.error('Varken requires python3.6.2 or newer. You are on python%s.%s.%s - Exiting...',
@@ -12,22 +12,22 @@ if version_info < (3, 6, 2):
 
 class FieldDefaultsMeta(type):
     """Metaclass for applying defaults to fields."""
-    
+
     def __new__(cls, name, bases, dct):
         """Initialize the new class."""
         new_cls = super().__new__(cls, name, bases, dct)
-        
+
         # Gather field defaults from class attributes
         field_defaults = {}
-        
+
         for key, value in dct.items():
             # Ignore special methods and internal attributes
             if not key.startswith('__') and not callable(value):
                 field_defaults[key] = value
-        
+
         # Attach the field defaults to the new class
         new_cls._field_defaults = field_defaults
-        
+
         return new_cls
 
 
@@ -37,7 +37,6 @@ class BaseModel(metaclass=FieldDefaultsMeta):
     def __init__(self, *args, **kwargs):
         # Ensure the number of positional arguments does not exceed defined fields
         field_names = list(self.__annotations__.keys())
-        total_fields = len(field_names)
         provided_args = len(args)
 
         # Assign positional arguments
@@ -178,10 +177,12 @@ class OmbiRequestCounts(BaseModel):
     available: int = 0
     pending: int = 0
 
+
 class OmbiIssuesCounts(BaseModel):
     inProgress: int = 0
     pending: int = 0
     resolved: int = 0
+
 
 class OmbiTVRequest(BaseModel):
     background: str = None
@@ -204,6 +205,7 @@ class OmbiTVRequest(BaseModel):
     tvDbId: int = None
     requestedByAlias: str = None
     requestStatus: str = None
+
 
 class OmbiMovieRequest(BaseModel):
     approved: bool = None
@@ -306,6 +308,7 @@ class SonarrTVShow(BaseModel):
     useSceneNumbering: bool = None
     year: int = None
 
+
 class SonarrEpisode(BaseModel):
     absoluteEpisodeNumber: int = None
     airDate: str = None
@@ -333,6 +336,7 @@ class SonarrEpisode(BaseModel):
     grabTime: str = None
     seriesTitle: str = None
     images: Optional[list] = None
+
 
 class SonarrQueue(BaseModel):
     downloadClient: str = None
@@ -694,6 +698,7 @@ class LidarrQueue(BaseModel):
     downloadForced: bool = None
     id: int = None
     estimatedCompletionTime: str = None
+
 
 class LidarrAlbum(BaseModel):
     title: str = None
