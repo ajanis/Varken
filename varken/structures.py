@@ -1,5 +1,5 @@
 from sys import version_info
-from dataclasses import dataclass, field
+from dataclasses import dataclass, fields
 from logging import getLogger
 
 logger = getLogger('temp')
