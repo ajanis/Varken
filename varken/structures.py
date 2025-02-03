@@ -77,6 +77,7 @@ class InfluxServer(BaseModel):
     verify_ssl: bool = False
     org: str = '-'
 
+
 class Influx2Server(BaseModel):
     url: str = 'localhost'
     org: str = 'server'
@@ -85,6 +86,7 @@ class Influx2Server(BaseModel):
     timeout: int = 10000
     ssl: bool = False
     verify_ssl: bool = False
+
 
 class SonarrServer(BaseModel):
     api_key: str = None
@@ -98,6 +100,7 @@ class SonarrServer(BaseModel):
     url: str = None
     verify_ssl: bool = False
 
+
 class RadarrServer(BaseModel):
     api_key: str = None
     get_missing: bool = False
@@ -107,6 +110,7 @@ class RadarrServer(BaseModel):
     queue_run_seconds: int = 30
     url: str = None
     verify_ssl: bool = False
+
 
 class OmbiServer(BaseModel):
     api_key: str = None
@@ -120,6 +124,7 @@ class OmbiServer(BaseModel):
     url: str = None
     verify_ssl: bool = False
 
+
 class OverseerrServer(BaseModel):
     api_key: str = None
     id: int = None
@@ -129,6 +134,7 @@ class OverseerrServer(BaseModel):
     request_total_run_seconds: int = 30
     num_latest_requests_to_fetch: int = 10
     num_latest_requests_seconds: int = 30
+
 
 class TautulliServer(BaseModel):
     api_key: str = None
@@ -142,6 +148,7 @@ class TautulliServer(BaseModel):
     verify_ssl: bool = None
     maxmind_license_key: str = None
 
+
 class SickChillServer(BaseModel):
     api_key: str = None
     get_missing: bool = False
@@ -149,6 +156,7 @@ class SickChillServer(BaseModel):
     id: int = None
     url: str = None
     verify_ssl: bool = False
+
 
 class UniFiServer(BaseModel):
     get_usg_stats_run_seconds: int = 30
