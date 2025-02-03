@@ -12,14 +12,14 @@ if version_info < (3, 6, 2):
 class DynamicNamedTuple:
     def __init__(self, **kwargs):
         # Predefined fields with optional defaults
-        self._fields = {}
+        self._field_defaults = {}
         for key, value in self.__class__.__dict__.items():
             if not key.startswith('_') and not callable(value):
-                self._fields[key] = value
+                self._field_defaults[key] = value
 
         # Assign provided values, default where applicable
-        for key in self._fields:
-            setattr(self, key, kwargs.pop(key, self._fields[key]))
+        for key in self._field_defaults:
+            setattr(self, key, kwargs.pop(key, self._field_defaults[key]))
 
         # Add any additional fields dynamically
         for key, value in kwargs.items():
