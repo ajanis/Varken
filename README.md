@@ -17,8 +17,9 @@ ecosystem into InfluxDB using Grafana for a frontend
 Requirements:
 * [Python 3.6.7+](https://www.python.org/downloads/release/python-367/)
 * [Python3-pip](https://pip.pypa.io/en/stable/installing/)
-* [InfluxDB 1.8.x or 2.0.x](https://www.influxdata.com/)
+* [InfluxDB 1.8.x or 2.0.x](https://www.influxdata.com/) (optional)
 * [Grafana](https://grafana.com/)
+* Prometheus (optional)
 
 <p align="center">
 Example Dashboard
@@ -52,10 +53,27 @@ Please read [Asking for Support](https://wiki.cajun.pro/books/varken/chapter/ask
 [InfluxDB Installation Documentation](https://wiki.cajun.pro/books/varken/page/influxdb-d1f)
 Note: Only v1.8.x or v2.x are supported.
  
-Influxdb is required but not packaged as part of Varken. Varken will create
+Influxdb is optional and not packaged as part of Varken. Varken will create
 its database on its own. If you choose to give varken user permissions that
 do not include database creation, please ensure you create an influx database
 named `varken`
 
 ### Grafana
 [Grafana Installation/Dashboard Documentation](https://wiki.cajun.pro/books/varken/page/grafana) 
+
+### Prometheus (Optional)
+Varken can expose a Prometheus metrics endpoint that mirrors the InfluxDB points as gauges.
+Enable it in the `[prometheus]` section of your `varken.ini`:
+
+```ini
+[prometheus]
+enabled = true
+addr = 0.0.0.0
+port = 9595
+```
+
+Scrape the endpoint at:
+
+```text
+http://<prometheus_addr>:<prometheus_port>/metrics
+```

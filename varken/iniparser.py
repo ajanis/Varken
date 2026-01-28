@@ -154,10 +154,70 @@ class INIParser(object):
             self.config_blacklist()
 
         # Parse InfluxDB options
-        self.influx2_enabled = env.get('VRKN_GLOBAL_INFLUXDB2_ENABLED',
-                                       self.config.getboolean('global', 'influx2_enabled'))
+        try:
+            self.influxdb_enabled = boolcheck(env.get(
+                'VRKN_INFLUXDB_ENABLED',
+                env.get('VRKN_GLOBAL_INFLUX_ENABLED', self.config.get('influxdb', 'enabled'))
+            ))
+        except (NoOptionError, NoSectionError) as e:
+            self.logger.error('Missing key in %s. Error: %s', "influxdb", e)
+            self.rectify_ini()
+            return
+        except ValueError as e:
+            self.logger.error("Invalid configuration value in influxdb. Error: %s", e)
+            exit(1)
 
-        if self.influx2_enabled:
+        try:
+            self.influx2_enabled = boolcheck(env.get(
+                'VRKN_INFLUXDB2_ENABLED',
+                env.get('VRKN_GLOBAL_INFLUXDB2_ENABLED', self.config.get('influx2', 'enabled'))
+            ))
+        except (NoOptionError, NoSectionError) as e:
+            self.logger.error('Missing key in %s. Error: %s', "influx2", e)
+            self.rectify_ini()
+            return
+        except ValueError as e:
+            self.logger.error("Invalid configuration value in influx2. Error: %s", e)
+            exit(1)
+
+        self.influx_enabled = self.influxdb_enabled or self.influx2_enabled
+
+        if self.influxdb_enabled and self.influx2_enabled:
+            self.logger.warning('Both influxdb and influx2 are enabled; using influx2.')
+
+        try:
+            prometheus_enabled = env.get(
+                'VRKN_PROMETHEUS_ENABLED',
+                self.config.get('prometheus', 'enabled')
+                if self.config.has_option('prometheus', 'enabled')
+                else self.config.get('global', 'prometheus_enabled')
+            )
+            prometheus_addr = env.get(
+                'VRKN_PROMETHEUS_ADDR',
+                self.config.get('prometheus', 'addr')
+                if self.config.has_option('prometheus', 'addr')
+                else self.config.get('global', 'prometheus_addr')
+            )
+            prometheus_port = env.get(
+                'VRKN_PROMETHEUS_PORT',
+                self.config.get('prometheus', 'port')
+                if self.config.has_option('prometheus', 'port')
+                else self.config.get('global', 'prometheus_port')
+            )
+            self.prometheus_enabled = boolcheck(prometheus_enabled)
+            self.prometheus_addr = prometheus_addr
+            self.prometheus_port = int(prometheus_port)
+        except (NoOptionError, NoSectionError) as e:
+            self.logger.error('Missing key in %s. Error: %s', "prometheus", e)
+            self.rectify_ini()
+            return
+        except ValueError as e:
+            self.logger.error("Invalid configuration value in prometheus. Error: %s", e)
+            exit(1)
+
+        if not self.influx_enabled:
+            self.influx_server = None
+        elif self.influx2_enabled:
             # Use INFLUX version 2
             try:
                 url = self.url_check(env.get('VRKN_INFLUXDB2_URL', self.config.get('influx2', 'url')),

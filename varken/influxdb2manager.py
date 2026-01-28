@@ -6,9 +6,10 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 
 class InfluxDB2Manager(object):
-    def __init__(self, server):
+    def __init__(self, server, prometheus_exporter=None):
         self.server = server
         self.logger = getLogger()
+        self.prometheus_exporter = prometheus_exporter
         if self.server.url == "influxdb2.domain.tld":
             self.logger.critical("You have not configured your varken.ini. Please read Wiki page for configuration")
             exit()
@@ -41,9 +42,18 @@ class InfluxDB2Manager(object):
     def write_points(self, data):
         d = data
         self.logger.info('Writing Data to InfluxDBv2 %s', d)
+        self._export_prometheus(d)
 
         try:
             self.influx_write_api.write(bucket=self.server.bucket, record=d)
         except Exception as e:
             self.logger.error('Error writing data to influxdb2. Dropping this set of data. '
                               'Check your database! Error: %s', e)
+
+    def _export_prometheus(self, data):
+        if not self.prometheus_exporter:
+            return
+        try:
+            self.prometheus_exporter.observe_points(data)
+        except Exception as e:
+            self.logger.error('Error exporting Prometheus metrics. Error: %s', e)

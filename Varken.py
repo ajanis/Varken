@@ -28,6 +28,8 @@ from varken.helpers import GeoIPHandler
 from varken.tautulli import TautulliAPI
 from varken.sickchill import SickChillAPI
 from varken.varkenlogger import VarkenLogger
+from varken.prometheus import PrometheusExporter
+from varken.noopmanager import NoopDBManager
 
 
 PLATFORM_LINUX_DISTRO = ' '.join(distro.id() + distro.version() + distro.name())
@@ -94,13 +96,22 @@ if __name__ == "__main__":
 
     CONFIG = INIParser(DATA_FOLDER)
 
-    if CONFIG.influx2_enabled:
+    PROMETHEUS_EXPORTER = None
+    if CONFIG.prometheus_enabled:
+        PROMETHEUS_EXPORTER = PrometheusExporter(addr=CONFIG.prometheus_addr, port=CONFIG.prometheus_port)
+        if not PROMETHEUS_EXPORTER.enabled:
+            PROMETHEUS_EXPORTER = None
+
+    if not CONFIG.influx_enabled:
+        vl.logger.info('InfluxDB disabled')
+        DBMANAGER = NoopDBManager(prometheus_exporter=PROMETHEUS_EXPORTER)
+    elif CONFIG.influx2_enabled:
         # Use INFLUX version 2
         vl.logger.info('Using INFLUXDBv2')
-        DBMANAGER = InfluxDB2Manager(CONFIG.influx_server)
+        DBMANAGER = InfluxDB2Manager(CONFIG.influx_server, prometheus_exporter=PROMETHEUS_EXPORTER)
     else:
         vl.logger.info('Using INFLUXDB')
-        DBMANAGER = DBManager(CONFIG.influx_server)
+        DBMANAGER = DBManager(CONFIG.influx_server, prometheus_exporter=PROMETHEUS_EXPORTER)
 
     QUEUE = Queue()
 
@@ -118,8 +129,11 @@ if __name__ == "__main__":
                 at_time.do(thread, SONARR.get_calendar, query="Future").tag("sonarr-{}-get_future".format(server.id))
 
     if CONFIG.tautulli_enabled:
-        GEOIPHANDLER = GeoIPHandler(DATA_FOLDER, CONFIG.tautulli_servers[0].maxmind_license_key)
-        schedule.every(12).to(24).hours.do(thread, GEOIPHANDLER.update)
+        GEOIPHANDLER = None
+        if any(server.get_activity for server in CONFIG.tautulli_servers):
+            GEOIPHANDLER = GeoIPHandler(DATA_FOLDER, CONFIG.tautulli_servers[0].maxmind_license_key)
+        if GEOIPHANDLER:
+            schedule.every(12).to(24).hours.do(thread, GEOIPHANDLER.update)
         for server in CONFIG.tautulli_servers:
             TAUTULLI = TautulliAPI(server, DBMANAGER, GEOIPHANDLER)
             if server.get_activity:
