@@ -5,7 +5,7 @@ from datetime import datetime, timezone, date, timedelta
 from influxdb_client.client.exceptions import InfluxDBError
 
 from varken.structures import TautulliStream
-from varken.helpers import hashit, connection_handler, itemgetter_with_default
+from varken.helpers import hashit, connection_handler
 
 
 class TautulliAPI(object):
@@ -47,10 +47,11 @@ class TautulliAPI(object):
             return
 
         get = g['response']['data']
-        fields = itemgetter_with_default(**TautulliStream._field_defaults)
-
         try:
-            sessions = [TautulliStream(*fields(session)) for session in get['sessions']]
+            sessions = [
+                TautulliStream(**{k: session.get(k, v) for k, v in TautulliStream._field_defaults.items()})
+                for session in get['sessions']
+            ]
         except TypeError as e:
             self.logger.error('TypeError has occurred : %s while creating TautulliStream structure', e)
             return
