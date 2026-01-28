@@ -43,7 +43,9 @@ class SonarrAPI(object):
             params = {'start': today, 'end': future, 'includeSeries': True}
         influx_payload = []
         air_days = []
-        missing = []
+        missing_episode_count = 0
+        missing_show_ids = set()
+        missing_seasons = set()
 
         req = self.session.prepare_request(Request('GET', self.server.url + endpoint, params=params))
         get = connection_handler(self.session, req, self.server.verify_ssl)
@@ -61,19 +63,21 @@ class SonarrAPI(object):
 
         for episode in tv_shows:
             tvShow = episode.series
-            sxe = f'S{episode.seasonNumber:0>2}E{episode.episodeNumber:0>2}'
             if episode.hasFile:
                 downloaded = 1
             else:
                 downloaded = 0
             if query == "Missing":
                 if episode.monitored and not downloaded:
-                    missing.append((tvShow['title'], downloaded, sxe, episode.title,
-                                    episode.airDateUtc, episode.seriesId))
+                    missing_episode_count += 1
+                    series_id = getattr(episode, 'seriesId', tvShow.get('id'))
+                    missing_show_ids.add(series_id)
+                    missing_seasons.add((series_id, episode.seasonNumber))
             else:
+                sxe = f'S{episode.seasonNumber:0>2}E{episode.episodeNumber:0>2}'
                 air_days.append((tvShow['title'], downloaded, sxe, episode.title, episode.airDateUtc, episode.seriesId))
 
-        selected = missing if query == "Missing" else air_days
+        selected = missing_episode_count if query == "Missing" else len(air_days)
         influx_payload.append(
             {
                 "measurement": "Sonarr",
@@ -83,32 +87,36 @@ class SonarrAPI(object):
                 },
                 "time": now,
                 "fields": {
-                    "count": len(selected)
+                    "count": selected,
+                    "show_count": len(missing_show_ids) if query == "Missing" else 0,
+                    "season_count": len(missing_seasons) if query == "Missing" else 0,
+                    "episode_count": selected if query == "Missing" else 0
                 }
             }
         )
 
-        for series_title, dl_status, sxe, episode_title, air_date_utc, sonarr_id in (air_days or missing):
-            hash_id = hashit(f'{self.server.id}{series_title}{sxe}')
-            influx_payload.append(
-                {
-                    "measurement": "Sonarr",
-                    "tags": {
-                        "type": query,
-                        "sonarrId": sonarr_id,
-                        "server": self.server.id,
-                        "name": series_title,
-                        "epname": episode_title,
-                        "sxe": sxe,
-                        "airsUTC": air_date_utc,
-                        "downloaded": dl_status
-                    },
-                    "time": now,
-                    "fields": {
-                        "hash": hash_id
+        if query != "Missing":
+            for series_title, dl_status, sxe, episode_title, air_date_utc, sonarr_id in air_days:
+                hash_id = hashit(f'{self.server.id}{series_title}{sxe}')
+                influx_payload.append(
+                    {
+                        "measurement": "Sonarr",
+                        "tags": {
+                            "type": query,
+                            "sonarrId": sonarr_id,
+                            "server": self.server.id,
+                            "name": series_title,
+                            "epname": episode_title,
+                            "sxe": sxe,
+                            "airsUTC": air_date_utc,
+                            "downloaded": dl_status
+                        },
+                        "time": now,
+                        "fields": {
+                            "hash": hash_id
+                        }
                     }
-                }
-            )
+                )
 
         if influx_payload:
             self.dbmanager.write_points(influx_payload)

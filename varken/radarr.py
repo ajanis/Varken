@@ -55,30 +55,11 @@ class RadarrAPI(object):
                 },
                 "time": now,
                 "fields": {
-                    "count": len(missing)
+                    "count": len(missing),
+                    "movie_count": len(missing)
                 }
             }
         )
-
-        for title, ma, mid, title_slug in missing:
-            hash_id = hashit(f'{self.server.id}{title}{mid}')
-            influx_payload.append(
-                {
-                    "measurement": "Radarr",
-                    "tags": {
-                        "Missing": True,
-                        "Missing_Available": ma,
-                        "tmdbId": mid,
-                        "server": self.server.id,
-                        "name": title,
-                        "titleSlug": title_slug
-                    },
-                    "time": now,
-                    "fields": {
-                        "hash": hash_id
-                    }
-                }
-            )
 
         if influx_payload:
             self.dbmanager.write_points(influx_payload)
