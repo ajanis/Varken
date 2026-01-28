@@ -23,6 +23,19 @@ class TautulliAPI(object):
         return f"<tautulli-{self.server.id}>"
 
     def get_activity(self):
+        class _GeoFallback(object):
+            class location:
+                latitude = None
+                longitude = None
+
+            class city:
+                name = None
+
+            class subdivisions:
+                class most_specific:
+                    iso_code = ''
+                    name = ''
+
         now = datetime.now(timezone.utc).astimezone().isoformat()
         influx_payload = []
         params = {'cmd': 'get_activity'}
@@ -42,6 +55,8 @@ class TautulliAPI(object):
             self.logger.error('TypeError has occurred : %s while creating TautulliStream structure', e)
             return
 
+        geoip_available = bool(self.geoiphandler and getattr(self.geoiphandler, 'reader', None))
+
         for session in sessions:
             # Check to see if ip_address_public attribute exists as it was introduced in v2
             try:
@@ -50,25 +65,28 @@ class TautulliAPI(object):
                 self.logger.error('Public IP attribute missing!!! Do you have an old version of Tautulli (v1)?')
                 exit(1)
 
-            try:
-                geodata = self.geoiphandler.lookup(session.ip_address_public)
-            except (ValueError, AddressNotFoundError):
-                self.logger.debug('Public IP missing for Tautulli session...')
-                if not self.my_ip:
-                    # Try the fallback ip in the config file
-                    try:
-                        self.logger.debug('Attempting to use the fallback IP...')
-                        geodata = self.geoiphandler.lookup(self.server.fallback_ip)
-                    except AddressNotFoundError as e:
-                        self.logger.error('%s', e)
+            if geoip_available:
+                try:
+                    geodata = self.geoiphandler.lookup(session.ip_address_public)
+                except (ValueError, AddressNotFoundError):
+                    self.logger.debug('Public IP missing for Tautulli session...')
+                    if not self.my_ip:
+                        # Try the fallback ip in the config file
+                        try:
+                            self.logger.debug('Attempting to use the fallback IP...')
+                            geodata = self.geoiphandler.lookup(self.server.fallback_ip)
+                        except AddressNotFoundError as e:
+                            self.logger.error('%s', e)
 
-                        self.my_ip = self.session.get('http://ip.42.pl/raw').text
-                        self.logger.debug('Looked the public IP and set it to %s', self.my_ip)
+                            self.my_ip = self.session.get('http://ip.42.pl/raw').text
+                            self.logger.debug('Looked the public IP and set it to %s', self.my_ip)
 
+                            geodata = self.geoiphandler.lookup(self.my_ip)
+
+                    else:
                         geodata = self.geoiphandler.lookup(self.my_ip)
-
-                else:
-                    geodata = self.geoiphandler.lookup(self.my_ip)
+            else:
+                geodata = _GeoFallback()
 
             if not all([geodata.location.latitude, geodata.location.longitude]):
                 latitude = 37.234332396

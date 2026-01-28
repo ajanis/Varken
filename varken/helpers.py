@@ -37,13 +37,16 @@ class GeoIPHandler(object):
                 result_status = self.download()
                 if result_status:
                     self.logger.error("Could not download MaxMind DB! You may need to manually install it.")
-                    exit(1)
+                    self.reader = None
+                    return
                 else:
                     self.reader = Reader(self.dbfile)
         else:
             self.reader.close()
 
     def lookup(self, ipaddress):
+        if not self.reader:
+            raise ValueError("MaxMind DB not available")
         ip = ipaddress
         self.logger.debug('Getting lat/long for Tautulli stream using ip with last octet ending in %s',
                           ip.split('.')[-1:][0])

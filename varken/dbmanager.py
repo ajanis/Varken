@@ -8,10 +8,11 @@ from urllib3.exceptions import NewConnectionError
 
 
 class DBManager(object):
-    def __init__(self, server):
+    def __init__(self, server, prometheus_exporter=None):
         self.server = server
         self.logger = getLogger()
         self.bucket = "varken"
+        self.prometheus_exporter = prometheus_exporter
 
         if self.server.url == "influxdb.domain.tld":
             self.logger.critical("You have not configured your varken.ini. Please read Wiki page for configuration")
@@ -83,9 +84,18 @@ class DBManager(object):
     def write_points(self, data):
         d = data
         self.logger.debug('Writing Data to InfluxDB %s', d)
+        self._export_prometheus(d)
         write_api = self.influx.write_api(write_options=SYNCHRONOUS)
         try:
             write_api.write(bucket=self.bucket, record=data)
         except (InfluxDBError, NewConnectionError) as e:
             self.logger.error('Error writing data to influxdb. Dropping this set of data. '
                               'Check your database! Error: %s', e)
+
+    def _export_prometheus(self, data):
+        if not self.prometheus_exporter:
+            return
+        try:
+            self.prometheus_exporter.observe_points(data)
+        except Exception as e:
+            self.logger.error('Error exporting Prometheus metrics. Error: %s', e)

@@ -6,6 +6,7 @@ from logging import getLogger, StreamHandler, Formatter, DEBUG
 
 from varken.iniparser import INIParser
 from varken.dbmanager import DBManager
+from varken.noopmanager import NoopDBManager
 from varken.helpers import GeoIPHandler
 from varken.tautulli import TautulliAPI
 
@@ -38,7 +39,10 @@ if __name__ == "__main__":
             exit(1)
 
     CONFIG = INIParser(DATA_FOLDER)
-    DBMANAGER = DBManager(CONFIG.influx_server)
+    if CONFIG.influx_enabled:
+        DBMANAGER = DBManager(CONFIG.influx_server)
+    else:
+        DBMANAGER = NoopDBManager()
 
     if CONFIG.tautulli_enabled:
         GEOIPHANDLER = GeoIPHandler(DATA_FOLDER, CONFIG.tautulli_servers[0].maxmind_license_key)
