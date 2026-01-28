@@ -27,7 +27,7 @@ class RadarrAPI(object):
         req = self.session.prepare_request(Request('GET', self.server.url + endpoint))
         get = connection_handler(self.session, req, self.server.verify_ssl)
 
-        if not get:
+        if get is False:
             return
 
         try:
@@ -45,6 +45,20 @@ class RadarrAPI(object):
 
                 movie_name = f'{movie.title} ({movie.year})'
                 missing.append((movie_name, ma, movie.tmdbId, movie.titleSlug))
+
+        influx_payload.append(
+            {
+                "measurement": "Radarr",
+                "tags": {
+                    "type": "Missing",
+                    "server": self.server.id
+                },
+                "time": now,
+                "fields": {
+                    "count": len(missing)
+                }
+            }
+        )
 
         for title, ma, mid, title_slug in missing:
             hash_id = hashit(f'{self.server.id}{title}{mid}')
@@ -68,8 +82,6 @@ class RadarrAPI(object):
 
         if influx_payload:
             self.dbmanager.write_points(influx_payload)
-        else:
-            self.logger.warning("No data to send to influx for radarr-missing instance, discarding.")
 
     def get_queue(self):
         endpoint = '/api/v3/queue'
@@ -83,7 +95,7 @@ class RadarrAPI(object):
         req = self.session.prepare_request(Request('GET', self.server.url + endpoint, params=params))
         get = connection_handler(self.session, req, self.server.verify_ssl)
 
-        if not get:
+        if get is False:
             return
 
         response = QueuePages(**get)
@@ -94,7 +106,7 @@ class RadarrAPI(object):
             params = {'pageSize': pageSize, 'page': page, 'includeMovie': True, 'includeUnknownMovieItems': False}
             req = self.session.prepare_request(Request('GET', self.server.url + endpoint, params=params))
             get = connection_handler(self.session, req, self.server.verify_ssl)
-            if not get:
+            if get is False:
                 return
 
             response = QueuePages(**get)
@@ -107,8 +119,22 @@ class RadarrAPI(object):
             except TypeError as e:
                 self.logger.warning('TypeError has occurred : %s while creating RadarrQueue structure', e)
                 return
+        influx_payload.append(
+            {
+                "measurement": "Radarr",
+                "tags": {
+                    "type": "Queue",
+                    "server": self.server.id
+                },
+                "time": now,
+                "fields": {
+                    "count": len(download_queue)
+                }
+            }
+        )
+
         if not download_queue:
-            self.logger.warning("No data to send to influx for radarr-queue instance, discarding.")
+            self.dbmanager.write_points(influx_payload)
             return
 
         for queue_item in download_queue:
@@ -148,5 +174,3 @@ class RadarrAPI(object):
 
         if influx_payload:
             self.dbmanager.write_points(influx_payload)
-        else:
-            self.logger.warning("No data to send to influx for radarr-queue instance, discarding.")

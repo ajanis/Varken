@@ -65,14 +65,29 @@ class OverseerrAPI(object):
         get_latest_req = connection_handler(self.session, req, self.server.verify_ssl)
 
         # RETURN NOTHING IF NO RESULTS
-        if not get_latest_req:
+        if get_latest_req is False:
             self.logger.warning("No data to send to influx for overseerr-latest-requests instance, discarding.")
             return
 
         influx_payload = []
+        results = get_latest_req.get('results', []) if get_latest_req else []
+
+        influx_payload.append(
+            {
+                "measurement": "Overseerr",
+                "tags": {
+                    "type": "Requests",
+                    "server": self.server.id
+                },
+                "time": now,
+                "fields": {
+                    "count": len(results)
+                }
+            }
+        )
 
         # Request Type: Movie = 1, TV Show = 0
-        for result in get_latest_req['results']:
+        for result in results:
             if result['type'] == 'tv':
                 req = self.session.prepare_request(Request('GET',
                                                            self.server.url +

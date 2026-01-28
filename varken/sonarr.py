@@ -26,7 +26,7 @@ class SonarrAPI(object):
         req = self.session.prepare_request(Request('GET', self.server.url + endpoint, params=params))
         get = connection_handler(self.session, req, self.server.verify_ssl)
 
-        if not get:
+        if get is False:
             return
 
         return SonarrEpisode(**get[0])
@@ -73,6 +73,21 @@ class SonarrAPI(object):
             else:
                 air_days.append((tvShow['title'], downloaded, sxe, episode.title, episode.airDateUtc, episode.seriesId))
 
+        selected = missing if query == "Missing" else air_days
+        influx_payload.append(
+            {
+                "measurement": "Sonarr",
+                "tags": {
+                    "type": query,
+                    "server": self.server.id
+                },
+                "time": now,
+                "fields": {
+                    "count": len(selected)
+                }
+            }
+        )
+
         for series_title, dl_status, sxe, episode_title, air_date_utc, sonarr_id in (air_days or missing):
             hash_id = hashit(f'{self.server.id}{series_title}{sxe}')
             influx_payload.append(
@@ -97,8 +112,6 @@ class SonarrAPI(object):
 
         if influx_payload:
             self.dbmanager.write_points(influx_payload)
-        else:
-            self.logger.warning("No data to send to influx for sonarr-calendar instance, discarding.")
 
     def get_queue(self):
         influx_payload = []
@@ -112,7 +125,7 @@ class SonarrAPI(object):
 
         req = self.session.prepare_request(Request('GET', self.server.url + endpoint, params=params))
         get = connection_handler(self.session, req, self.server.verify_ssl)
-        if not get:
+        if get is False:
             return
 
         response = QueuePages(**get)
@@ -124,7 +137,7 @@ class SonarrAPI(object):
                       'includeUnknownSeriesItems': False}
             req = self.session.prepare_request(Request('GET', self.server.url + endpoint, params=params))
             get = connection_handler(self.session, req, self.server.verify_ssl)
-            if not get:
+            if get is False:
                 return
 
             response = QueuePages(**get)
@@ -137,7 +150,22 @@ class SonarrAPI(object):
             except TypeError as e:
                 self.logger.error('TypeError has occurred : %s while creating Queue structure. Data attempted is: '
                                   '%s', e, queueItem)
+        influx_payload.append(
+            {
+                "measurement": "Sonarr",
+                "tags": {
+                    "type": "Queue",
+                    "server": self.server.id
+                },
+                "time": now,
+                "fields": {
+                    "count": len(download_queue)
+                }
+            }
+        )
+
         if not download_queue:
+            self.dbmanager.write_points(influx_payload)
             return
 
         for queueItem in download_queue:
@@ -183,5 +211,3 @@ class SonarrAPI(object):
 
         if influx_payload:
             self.dbmanager.write_points(influx_payload)
-        else:
-            self.logger.warning("No data to send to influx for sonarr-queue instance, discarding.")

@@ -24,8 +24,10 @@ class PrometheusExporter(object):
         self.registry = None
         self.metrics = {}
         self.metric_labels = {}
+        self.metric_label_values = {}
         self.logged_label_mismatch = set()
         self.prefix = _sanitize_metric_name(prefix)
+        self.logged_non_numeric = set()
 
         if not PROMETHEUS_AVAILABLE:
             self.logger.error('Prometheus client is not installed. Install prometheus-client to enable metrics.')
@@ -46,6 +48,7 @@ class PrometheusExporter(object):
             return
 
         points = data if isinstance(data, list) else [data]
+        batch_series = {}
         for point in points:
             if not isinstance(point, dict):
                 continue
@@ -58,11 +61,6 @@ class PrometheusExporter(object):
                 continue
 
             for field_name, value in fields.items():
-                try:
-                    numeric_value = float(value)
-                except (TypeError, ValueError):
-                    continue
-
                 metric_name = self._metric_name(measurement, field_name)
                 gauge = self._get_gauge(metric_name, tags)
                 if gauge is None:
@@ -70,7 +68,32 @@ class PrometheusExporter(object):
 
                 label_names = self.metric_labels[metric_name]
                 label_values = [str(tags.get(label, '')) for label in label_names]
+                label_key = tuple(label_values)
+                batch_series.setdefault(metric_name, set()).add(label_key)
+                self.metric_label_values.setdefault(metric_name, set()).add(label_key)
+
+                try:
+                    numeric_value = float(value)
+                except (TypeError, ValueError):
+                    if value is None:
+                        continue
+                    if metric_name not in self.logged_non_numeric:
+                        self.logger.info(
+                            'Prometheus metric %s received non-numeric value; exporting as 1.',
+                            metric_name,
+                        )
+                        self.logged_non_numeric.add(metric_name)
+                    numeric_value = 1.0
+
                 gauge.labels(*label_values).set(numeric_value)
+
+        for metric_name, seen_labels in batch_series.items():
+            gauge = self.metrics.get(metric_name)
+            if not gauge:
+                continue
+            for label_key in self.metric_label_values.get(metric_name, set()):
+                if label_key not in seen_labels:
+                    gauge.labels(*label_key).set(0)
 
     def _metric_name(self, measurement, field_name):
         base = _sanitize_metric_name(f'{measurement}_{field_name}')
