@@ -50,7 +50,7 @@ class TautulliAPI(object):
         try:
             sessions = [
                 TautulliStream(**{k: session.get(k, v) for k, v in TautulliStream._field_defaults.items()})
-                for session in get['sessions']
+                for session in get.get('sessions', [])
             ]
         except TypeError as e:
             self.logger.error('TypeError has occurred : %s while creating TautulliStream structure', e)
