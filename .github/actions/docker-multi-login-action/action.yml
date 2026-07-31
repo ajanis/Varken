@@ -3,12 +3,18 @@ description: 'Log in to dockerhub, quay, and github container registry'
 runs:
   using: "composite"
   steps:
-    - shell: bash
-      run: |
-        echo "🔑 Logging into dockerhub..."
-        if docker login --username ${{ fromJSON(env.secrets).DOCKERHUB_USERNAME }} --password ${{ fromJSON(env.secrets).DOCKERHUB_PASSWORD }} > /dev/null 2>&1; then
-          echo "🎉 Login Succeeded!"
-        fi
+    # - shell: bash
+    #   run: |
+    #     echo "🔑 Logging into dockerhub..."
+    #     if docker login --username ${{ fromJSON(env.secrets).DOCKERHUB_USERNAME }} --password ${{ fromJSON(env.secrets).DOCKERHUB_PASSWORD }} > /dev/null 2>&1; then
+    #       echo "🎉 Login Succeeded!"
+    #     fi
+    - name: Log in to the Container registry
+      uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
   #  - shell: bash
   #    run: |
   #      echo "🔑 Logging into ghcr.io..."

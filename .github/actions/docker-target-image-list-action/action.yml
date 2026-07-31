@@ -5,7 +5,8 @@ inputs:
     description: "Comma separated list of docker registries"
     required: false
 #    default: "docker.io,quay.io,ghcr.io"
-    default: "docker.io"
+    # default: "docker.io"
+    default: ghcr.io
   images:
     description: "Comma separated list of images"
     required: true
