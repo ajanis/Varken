@@ -14,7 +14,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ fromJSON(env.secrets).GITHUB_TOKEN }}
   #  - shell: bash
   #    run: |
   #      echo "🔑 Logging into ghcr.io..."
