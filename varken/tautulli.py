@@ -1,41 +1,74 @@
 from logging import getLogger
+from collections import namedtuple
 from requests import Session, Request
-from geoip2.errors import AddressNotFoundError
 from datetime import datetime, timezone, date, timedelta
 from influxdb_client.client.exceptions import InfluxDBError
 
 from varken.structures import TautulliStream
 from varken.helpers import hashit, connection_handler
 
+GeoData = namedtuple('GeoData', ['city', 'region', 'code', 'latitude', 'longitude'])
+GEO_UNKNOWN = GeoData(city=None, region='', code='', latitude=None, longitude=None)
+
 
 class TautulliAPI(object):
-    def __init__(self, server, dbmanager, geoiphandler):
+    def __init__(self, server, dbmanager):
         self.dbmanager = dbmanager
         self.server = server
-        self.geoiphandler = geoiphandler
         self.session = Session()
         self.session.params = {'apikey': self.server.api_key}
         self.endpoint = '/api/v2'
         self.logger = getLogger()
         self.my_ip = None
+        self.geoip_cache = {}
 
     def __repr__(self):
         return f"<tautulli-{self.server.id}>"
 
+    def geoip_lookup(self, ip_address):
+        """Resolves one IP through Tautulli, which proxies plex.tv. Returns GeoData or None."""
+        if not ip_address:
+            return None
+
+        if ip_address in self.geoip_cache:
+            return self.geoip_cache[ip_address]
+
+        params = {'cmd': 'get_geoip_lookup', 'ip_address': ip_address}
+        req = self.session.prepare_request(Request('GET', self.server.url + self.endpoint, params=params))
+        g = connection_handler(self.session, req, self.server.verify_ssl)
+
+        data = g.get('response', {}).get('data') if g else None
+        if not isinstance(data, dict) or data.get('latitude') is None:
+            # Tautulli replaces data with {'error': ...} for an unroutable or malformed IP.
+            self.logger.debug('Tautulli could not resolve geodata for IP ending in %s', ip_address.split('.')[-1])
+            self.geoip_cache[ip_address] = None
+            return None
+
+        geodata = GeoData(city=data.get('city'), region=data.get('region') or '', code=data.get('code') or '',
+                          latitude=data.get('latitude'), longitude=data.get('longitude'))
+        self.geoip_cache[ip_address] = geodata
+
+        return geodata
+
+    def session_geodata(self, ip_address):
+        """Resolves a stream IP, degrading to the configured fallback IP then Varken's own public IP."""
+        geodata = self.geoip_lookup(ip_address)
+        if geodata:
+            return geodata
+
+        self.logger.debug('Public IP missing for Tautulli session...')
+        if not self.my_ip:
+            self.logger.debug('Attempting to use the fallback IP...')
+            geodata = self.geoip_lookup(self.server.fallback_ip)
+            if geodata:
+                return geodata
+
+            self.my_ip = self.session.get('http://ip.42.pl/raw').text
+            self.logger.debug('Looked the public IP and set it to %s', self.my_ip)
+
+        return self.geoip_lookup(self.my_ip) or GEO_UNKNOWN
+
     def get_activity(self):
-        class _GeoFallback(object):
-            class location:
-                latitude = None
-                longitude = None
-
-            class city:
-                name = None
-
-            class subdivisions:
-                class most_specific:
-                    iso_code = ''
-                    name = ''
-
         now = datetime.now(timezone.utc).astimezone().isoformat()
         influx_payload = []
         params = {'cmd': 'get_activity'}
@@ -56,8 +89,6 @@ class TautulliAPI(object):
             self.logger.error('TypeError has occurred : %s while creating TautulliStream structure', e)
             return
 
-        geoip_available = bool(self.geoiphandler and getattr(self.geoiphandler, 'reader', None))
-
         for session in sessions:
             # Check to see if ip_address_public attribute exists as it was introduced in v2
             try:
@@ -66,40 +97,19 @@ class TautulliAPI(object):
                 self.logger.error('Public IP attribute missing!!! Do you have an old version of Tautulli (v1)?')
                 exit(1)
 
-            if geoip_available:
-                try:
-                    geodata = self.geoiphandler.lookup(session.ip_address_public)
-                except (ValueError, AddressNotFoundError):
-                    self.logger.debug('Public IP missing for Tautulli session...')
-                    if not self.my_ip:
-                        # Try the fallback ip in the config file
-                        try:
-                            self.logger.debug('Attempting to use the fallback IP...')
-                            geodata = self.geoiphandler.lookup(self.server.fallback_ip)
-                        except AddressNotFoundError as e:
-                            self.logger.error('%s', e)
+            geodata = self.session_geodata(session.ip_address_public)
 
-                            self.my_ip = self.session.get('http://ip.42.pl/raw').text
-                            self.logger.debug('Looked the public IP and set it to %s', self.my_ip)
-
-                            geodata = self.geoiphandler.lookup(self.my_ip)
-
-                    else:
-                        geodata = self.geoiphandler.lookup(self.my_ip)
-            else:
-                geodata = _GeoFallback()
-
-            if not all([geodata.location.latitude, geodata.location.longitude]):
+            if not all([geodata.latitude, geodata.longitude]):
                 latitude = 37.234332396
                 longitude = -115.80666344
             else:
-                latitude = geodata.location.latitude
-                longitude = geodata.location.longitude
+                latitude = geodata.latitude
+                longitude = geodata.longitude
 
-            if not geodata.city.name:
+            if not geodata.city:
                 location = '👽'
             else:
-                location = geodata.city.name
+                location = geodata.city
 
             decision = session.transcode_decision
             if decision == 'copy':
@@ -166,9 +176,9 @@ class TautulliAPI(object):
                         "stream_audio_codec": session.stream_audio_codec.upper(),
                         "quality_profile": session.quality_profile,
                         "progress_percent": session.progress_percent,
-                        "region_code": geodata.subdivisions.most_specific.iso_code,
+                        "region_code": geodata.code,
                         "location": location,
-                        "full_location": f'{geodata.subdivisions.most_specific.name} - {geodata.city.name}',
+                        "full_location": f'{geodata.region} - {geodata.city}',
                         "latitude": latitude,
                         "longitude": longitude,
                         "player_state": player_state,
@@ -279,37 +289,19 @@ class TautulliAPI(object):
                 continue
 
         for session in sessions:
-            try:
-                geodata = self.geoiphandler.lookup(session.ip_address)
-            except (ValueError, AddressNotFoundError):
-                self.logger.debug('Public IP missing for Tautulli session...')
-                if not self.my_ip:
-                    # Try the fallback ip in the config file
-                    try:
-                        self.logger.debug('Attempting to use the fallback IP...')
-                        geodata = self.geoiphandler.lookup(self.server.fallback_ip)
-                    except AddressNotFoundError as e:
-                        self.logger.error('%s', e)
+            geodata = self.session_geodata(session.ip_address)
 
-                        self.my_ip = self.session.get('http://ip.42.pl/raw').text
-                        self.logger.debug('Looked the public IP and set it to %s', self.my_ip)
-
-                        geodata = self.geoiphandler.lookup(self.my_ip)
-
-                else:
-                    geodata = self.geoiphandler.lookup(self.my_ip)
-
-            if not all([geodata.location.latitude, geodata.location.longitude]):
+            if not all([geodata.latitude, geodata.longitude]):
                 latitude = 37.234332396
                 longitude = -115.80666344
             else:
-                latitude = geodata.location.latitude
-                longitude = geodata.location.longitude
+                latitude = geodata.latitude
+                longitude = geodata.longitude
 
-            if not geodata.city.name:
+            if not geodata.city:
                 location = '👽'
             else:
-                location = geodata.city.name
+                location = geodata.city
 
             decision = session.transcode_decision
             if decision == 'copy':
@@ -363,9 +355,9 @@ class TautulliAPI(object):
                         "stream_audio_codec": session.stream_audio_codec.upper(),
                         "quality_profile": session.quality_profile,
                         "progress_percent": session.progress_percent,
-                        "region_code": geodata.subdivisions.most_specific.iso_code,
+                        "region_code": geodata.code,
                         "location": location,
-                        "full_location": f'{geodata.subdivisions.most_specific.name} - {geodata.city.name}',
+                        "full_location": f'{geodata.region} - {geodata.city}',
                         "latitude": latitude,
                         "longitude": longitude,
                         "player_state": player_state,

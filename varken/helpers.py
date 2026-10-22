@@ -1,135 +1,14 @@
 from hashlib import md5
-from datetime import date, timedelta
-from time import sleep
+from os import makedirs
+from os.path import isdir
 from logging import getLogger
 from ipaddress import IPv4Address
-from urllib.error import HTTPError, URLError
-from geoip2.database import Reader
-from tarfile import open as taropen
 from urllib3 import disable_warnings
-from os import stat, remove, makedirs
-from urllib.request import urlretrieve
 from json.decoder import JSONDecodeError
-from os.path import abspath, join, basename, isdir
 from urllib3.exceptions import InsecureRequestWarning
 from requests.exceptions import InvalidSchema, SSLError, ConnectionError, ChunkedEncodingError
 
 logger = getLogger()
-
-
-class GeoIPHandler(object):
-    def __init__(self, data_folder, maxmind_license_key):
-        self.data_folder = data_folder
-        self.maxmind_license_key = maxmind_license_key
-        self.dbfile = abspath(join(self.data_folder, 'GeoLite2-City.mmdb'))
-        self.logger = getLogger()
-        self.reader = None
-        self.reader_manager(action='open')
-
-        self.logger.info('Opening persistent connection to the MaxMind DB...')
-
-    def reader_manager(self, action=None):
-        if action == 'open':
-            try:
-                self.reader = Reader(self.dbfile)
-            except FileNotFoundError:
-                self.logger.error("Could not find MaxMind DB! Downloading!")
-                result_status = self.download()
-                if result_status:
-                    self.logger.error("Could not download MaxMind DB! You may need to manually install it.")
-                    self.reader = None
-                    return
-                else:
-                    self.reader = Reader(self.dbfile)
-        else:
-            self.reader.close()
-
-    def lookup(self, ipaddress):
-        if not self.reader:
-            raise ValueError("MaxMind DB not available")
-        ip = ipaddress
-        self.logger.debug('Getting lat/long for Tautulli stream using ip with last octet ending in %s',
-                          ip.split('.')[-1:][0])
-        return self.reader.city(ip)
-
-    def update(self):
-        today = date.today()
-
-        try:
-            dbdate = date.fromtimestamp(stat(self.dbfile).st_mtime)
-            db_next_update = date.fromtimestamp(stat(self.dbfile).st_mtime) + timedelta(days=30)
-
-        except FileNotFoundError:
-            self.logger.error("Could not find MaxMind DB as: %s", self.dbfile)
-            self.download()
-            dbdate = date.fromtimestamp(stat(self.dbfile).st_mtime)
-            db_next_update = date.fromtimestamp(stat(self.dbfile).st_mtime) + timedelta(days=30)
-
-        if db_next_update < today:
-            self.logger.info("Newer MaxMind DB available, Updating...")
-            self.logger.debug("MaxMind DB date %s, DB updates after: %s, Today: %s",
-                              dbdate, db_next_update, today)
-            self.reader_manager(action='close')
-            self.download()
-            self.reader_manager(action='open')
-        else:
-            db_days_update = db_next_update - today
-            self.logger.debug("MaxMind DB will update in %s days", abs(db_days_update.days))
-            self.logger.debug("MaxMind DB date %s, DB updates after: %s, Today: %s",
-                              dbdate, db_next_update, today)
-
-    def download(self):
-        tar_dbfile = abspath(join(self.data_folder, 'GeoLite2-City.tar.gz'))
-        maxmind_url = ('https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City'
-                       f'&suffix=tar.gz&license_key={self.maxmind_license_key}')
-        downloaded = False
-
-        retry_counter = 0
-
-        while not downloaded:
-            self.logger.info('Downloading GeoLite2 DB from MaxMind...')
-            try:
-                urlretrieve(maxmind_url, tar_dbfile)
-                downloaded = True
-            except URLError as e:
-                self.logger.error("Problem downloading new MaxMind DB: %s", e)
-                result_status = 1
-                return result_status
-            except HTTPError as e:
-                if e.code == 401:
-                    self.logger.error("Your MaxMind license key is incorect! Check your config: %s", e)
-                    result_status = 1
-                    return result_status
-                else:
-                    self.logger.error("Problem downloading new MaxMind DB... Trying again: %s", e)
-                    sleep(2)
-                    retry_counter = (retry_counter + 1)
-
-                if retry_counter >= 3:
-                    self.logger.error("Retried downloading the new MaxMind DB 3 times and failed... Aborting!")
-                    result_status = 1
-                    return result_status
-        try:
-            remove(self.dbfile)
-        except FileNotFoundError:
-            self.logger.warning("Cannot remove MaxMind DB as it does not exist!")
-
-        self.logger.debug("Opening MaxMind tar file : %s", tar_dbfile)
-
-        tar = taropen(tar_dbfile, 'r:gz')
-
-        for files in tar.getmembers():
-            if 'GeoLite2-City.mmdb' in files.name:
-                self.logger.debug('"GeoLite2-City.mmdb" FOUND in tar file')
-                files.name = basename(files.name)
-                tar.extract(files, self.data_folder)
-                self.logger.debug('%s has been extracted to %s', files, self.data_folder)
-        tar.close()
-        try:
-            remove(tar_dbfile)
-            self.logger.debug('Removed the MaxMind DB tar file.')
-        except FileNotFoundError:
-            self.logger.warning("Cannot remove MaxMind DB TAR file as it does not exist!")
 
 
 def hashit(string):

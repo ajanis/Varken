@@ -24,7 +24,6 @@ from varken.lidarr import LidarrAPI
 from varken.iniparser import INIParser
 from varken.dbmanager import DBManager
 from varken.influxdb2manager import InfluxDB2Manager
-from varken.helpers import GeoIPHandler
 from varken.tautulli import TautulliAPI
 from varken.sickchill import SickChillAPI
 from varken.varkenlogger import VarkenLogger
@@ -129,13 +128,8 @@ if __name__ == "__main__":
                 at_time.do(thread, SONARR.get_calendar, query="Future").tag("sonarr-{}-get_future".format(server.id))
 
     if CONFIG.tautulli_enabled:
-        GEOIPHANDLER = None
-        if any(server.get_activity for server in CONFIG.tautulli_servers):
-            GEOIPHANDLER = GeoIPHandler(DATA_FOLDER, CONFIG.tautulli_servers[0].maxmind_license_key)
-        if GEOIPHANDLER:
-            schedule.every(12).to(24).hours.do(thread, GEOIPHANDLER.update)
         for server in CONFIG.tautulli_servers:
-            TAUTULLI = TautulliAPI(server, DBMANAGER, GEOIPHANDLER)
+            TAUTULLI = TautulliAPI(server, DBMANAGER)
             if server.get_activity:
                 at_time = schedule.every(server.get_activity_run_seconds).seconds
                 at_time.do(thread, TAUTULLI.get_activity).tag("tautulli-{}-get_activity".format(server.id))
