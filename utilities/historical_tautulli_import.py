@@ -7,7 +7,6 @@ from logging import getLogger, StreamHandler, Formatter, DEBUG
 from varken.iniparser import INIParser
 from varken.dbmanager import DBManager
 from varken.noopmanager import NoopDBManager
-from varken.helpers import GeoIPHandler
 from varken.tautulli import TautulliAPI
 
 if __name__ == "__main__":
@@ -45,7 +44,6 @@ if __name__ == "__main__":
         DBMANAGER = NoopDBManager()
 
     if CONFIG.tautulli_enabled:
-        GEOIPHANDLER = GeoIPHandler(DATA_FOLDER, CONFIG.tautulli_servers[0].maxmind_license_key)
         for server in CONFIG.tautulli_servers:
-            TAUTULLI = TautulliAPI(server, DBMANAGER, GEOIPHANDLER)
+            TAUTULLI = TautulliAPI(server, DBMANAGER)
             TAUTULLI.get_historical(days=opts.days)

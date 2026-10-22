@@ -109,7 +109,6 @@ class TautulliServer(DynamicNamedTuple):
     id: int = None
     url: str = None
     verify_ssl: bool = None
-    maxmind_license_key: str = None
 
 
 class SickChillServer(DynamicNamedTuple):

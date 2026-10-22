@@ -37,7 +37,7 @@ Supported Modules:
 
 Key features:
 * Multiple server support for all modules
-* Geolocation mapping from [GeoLite2](https://dev.maxmind.com/geoip/geoip2/geolite2/)
+* Geolocation mapping via [Tautulli's GeoIP lookup](https://github.com/Tautulli/Tautulli/wiki/Tautulli-API-Reference#get_geoip_lookup)
 * Grafana [Worldmap Panel](https://grafana.com/plugins/grafana-worldmap-panel/installation) support
 
 
